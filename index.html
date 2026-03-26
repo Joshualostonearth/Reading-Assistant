@@ -1,117 +1,820 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ReadFlow — the smart reading companion. Text-to-speech, focus mode, and personalised reading tools for every student." />
+  <title>ReadFlow — Read Smarter, Learn More</title>
 
-<title>ReadFlow – Smart Reading Assistant</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+            body:    ['"Instrument Sans"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            ink:    '#111111',
+            paper:  '#FAFAF8',
+            canvas: '#F4F3EF',
+            green: {
+              DEFAULT: '#3ECF4C',
+              dark:    '#2DB83A',
+              light:   '#E8FAE9',
+            },
+            amber: {
+              soft: '#FFF8EC',
+              mid:  '#FFE49D',
+              DEFAULT: '#F5A623',
+            },
+          },
+          boxShadow: {
+            'hard':    '4px 4px 0px 0px #111111',
+            'hard-sm': '2px 2px 0px 0px #111111',
+            'hard-lg': '6px 6px 0px 0px #111111',
+            'hard-green': '4px 4px 0px 0px #2DB83A',
+            'card':    '0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05)',
+          },
+          borderRadius: {
+            '2xl': '1rem',
+            '3xl': '1.5rem',
+            '4xl': '2rem',
+          },
+        }
+      }
+    }
+  </script>
 
-<link rel="stylesheet" href="style.css">
+  <!-- Google Fonts — Bricolage Grotesque + Instrument Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
 
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
+  <link rel="stylesheet" href="style.css" />
 </head>
 
-<body>
+<body class="font-body bg-paper text-ink antialiased overflow-x-hidden">
 
-<header class="rf-header">
-<div class="rf-container">
+  <a href="#main" class="skip-link">Skip to main content</a>
 
-<h1 class="rf-logo">
-<i class="fa-solid fa-book-open"></i> ReadFlow
-</h1>
+  <!-- ================================================================
+       NAVBAR — Notion-clean: white, 1px border, logo + nav + CTA
+       ================================================================ -->
+  <header id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-paper/95 backdrop-blur-sm border-b border-ink/8 transition-all duration-300">
+    <div class="max-w-6xl mx-auto px-5 lg:px-6 h-[60px] flex items-center gap-6">
 
-<p class="rf-tagline">
-An intelligent reading assistant designed to improve focus and comprehension
-</p>
+      <!-- Logo -->
+      <a href="#home" class="flex items-center gap-2.5 group shrink-0" aria-label="ReadFlow home">
+        <div class="w-8 h-8 rounded-xl bg-ink flex items-center justify-center shadow-hard-sm group-hover:translate-x-[1px] group-hover:translate-y-[1px] group-hover:shadow-none transition-all duration-150">
+          <i class="fa-solid fa-book-open-reader text-white text-xs"></i>
+        </div>
+        <span class="font-display font-bold text-[1.2rem] tracking-tight text-ink">Read<span class="text-green">Flow</span></span>
+      </a>
 
-</div>
-</header>
+      <!-- Desktop nav -->
+      <nav class="hidden md:flex items-center gap-0.5 ml-2" aria-label="Main navigation">
+        <a href="#home"     class="nav-link">Home</a>
+        <a href="#about"    class="nav-link">About</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#tools"    class="nav-link">Tools</a>
+        <a href="#contact"  class="nav-link">Contact</a>
+      </nav>
 
+      <div class="flex items-center gap-2 ml-auto">
+        <a href="#tools" class="hidden md:flex items-center gap-1.5 h-9 px-4 rounded-xl border border-ink/15 hover:border-ink/30 hover:bg-ink/[0.03] text-sm font-semibold text-ink/70 hover:text-ink transition-all duration-150">
+          Sign in
+        </a>
+        <a href="#tools" class="cta-pill-primary text-sm">
+          <i class="fa-solid fa-play text-[0.6rem]"></i>
+          Try free
+        </a>
+        <button id="hamburger" class="md:hidden w-9 h-9 rounded-xl flex items-center justify-center hover:bg-ink/5 transition-colors" aria-label="Menu" aria-expanded="false">
+          <i class="fa-solid fa-bars text-ink/60"></i>
+        </button>
+      </div>
+    </div>
 
-<main class="rf-container">
-
-<section class="rf-card">
-
-<h2>Reading Assistant</h2>
-
-<p class="rf-description">
-Paste your text below and let the assistant read it aloud while tracking your progress.
-</p>
-
-
-<textarea
-id="textInput"
-class="rf-textarea"
-rows="6"
-placeholder="Paste your text here..."
-></textarea>
-
-
-<div class="rf-controls">
-
-<button id="btnRead" class="rf-btn rf-btn--green">
-<i class="fa-solid fa-circle-play"></i> Read Aloud
-</button>
-
-<button id="btnPause" class="rf-btn rf-btn--amber" disabled>
-<i class="fa-solid fa-circle-pause"></i> Pause
-</button>
-
-<button id="btnStop" class="rf-btn rf-btn--red" disabled>
-<i class="fa-solid fa-circle-stop"></i> Stop
-</button>
-
-<button id="btnFocus" class="rf-btn rf-btn--outline">
-<i class="fa-solid fa-eye-slash"></i> Focus Mode
-</button>
-
-<button id="btnClear" class="rf-btn rf-btn--ghost">
-<i class="fa-solid fa-rotate-left"></i> Clear
-</button>
-
-</div>
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="hidden md:hidden border-t border-ink/8 px-5 py-3 bg-paper">
+      <nav class="flex flex-col gap-0.5">
+        <a href="#home"     class="mobile-nav-link">Home</a>
+        <a href="#about"    class="mobile-nav-link">About</a>
+        <a href="#features" class="mobile-nav-link">Features</a>
+        <a href="#tools"    class="mobile-nav-link">Tools</a>
+        <a href="#contact"  class="mobile-nav-link">Contact</a>
+        <div class="pt-2 mt-1 border-t border-ink/6">
+          <a href="#tools" class="cta-pill-primary w-full justify-center text-sm mt-1">
+            <i class="fa-solid fa-play text-[0.6rem]"></i> Try for Free
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
 
 
-<div class="rf-progress">
+  <main id="main" class="pt-[60px]">
 
-<div class="rf-progress-info">
+    <!-- ============================================================
+         HERO — Bold split layout
+         Left: giant headline + neobrutalist CTA
+         Right: floating app window card
+         ============================================================ -->
+    <section id="home" class="relative bg-paper overflow-hidden min-h-[calc(100vh-60px)] flex items-center">
 
-<span id="progLabel">Progress</span>
+      <!-- Subtle grid texture -->
+      <div class="hero-grid-texture absolute inset-0 pointer-events-none" aria-hidden="true"></div>
 
-<span id="progPct">0%</span>
+      <!-- Decorative color blobs (abstract shapes) -->
+      <div class="absolute top-20 right-[5%] w-64 h-64 rounded-full bg-green/20 blur-3xl pointer-events-none" aria-hidden="true"></div>
+      <div class="absolute bottom-24 left-[8%] w-48 h-48 rounded-full bg-amber-mid/30 blur-3xl pointer-events-none" aria-hidden="true"></div>
 
-</div>
+      <!-- Duolingo-style floating emoji decorators -->
+      <div class="deco-float deco-float--1" aria-hidden="true">📖</div>
+      <div class="deco-float deco-float--2" aria-hidden="true">🎯</div>
+      <div class="deco-float deco-float--3" aria-hidden="true">⚡</div>
 
-<div id="progBar" class="rf-progress-bar">
+      <div class="relative z-10 max-w-6xl mx-auto px-5 lg:px-6 py-20 w-full">
+        <div class="grid lg:grid-cols-[1fr_460px] gap-12 xl:gap-20 items-center">
 
-<div id="progFill" class="rf-progress-fill"></div>
+          <!-- LEFT: Copy -->
+          <div>
+            <!-- Khan Academy-style trust badge -->
+            <div class="hero-badge stagger-1">
+              <span class="badge-dot"></span>
+              Free for every student — no sign-up needed
+            </div>
 
-</div>
+            <!-- Headline — Bricolage Grotesque display weight -->
+            <h1 class="font-display text-[3.2rem] sm:text-[4rem] lg:text-[4.5rem] xl:text-[5rem] font-extrabold leading-[1.0] tracking-[-0.03em] text-ink mt-6 mb-6 stagger-2">
+              Read smarter.<br>
+              <span class="hero-accent-word">Learn faster.</span>
+            </h1>
 
-</div>
+            <p class="text-[1.1rem] text-ink/55 leading-[1.75] max-w-[480px] mb-8 stagger-3">
+              ReadFlow gives every student personalised reading tools —
+              text-to-speech, sentence highlighting, focus mode, and
+              adaptive display settings. All free. Forever.
+            </p>
+
+            <!-- Duolingo-style CTA group -->
+            <div class="flex flex-wrap gap-3 mb-10 stagger-4">
+              <a href="#tools" class="cta-duolingo-primary group">
+                <span class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors shrink-0">
+                  <i class="fa-solid fa-headphones text-sm"></i>
+                </span>
+                Start reading — it's free
+              </a>
+              <a href="#features" class="cta-ghost">
+                How it works
+                <i class="fa-solid fa-arrow-right text-ink/30 text-xs ml-1"></i>
+              </a>
+            </div>
+
+            <!-- Social proof row -->
+            <div class="flex flex-wrap items-center gap-5 stagger-5">
+              <div class="flex items-center gap-2.5">
+                <div class="flex -space-x-2">
+                  <div class="avatar-orb" style="background:linear-gradient(135deg,#f472b6,#db2777)">A</div>
+                  <div class="avatar-orb" style="background:linear-gradient(135deg,#60a5fa,#3b82f6)">M</div>
+                  <div class="avatar-orb" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">J</div>
+                  <div class="avatar-orb" style="background:linear-gradient(135deg,#34d399,#10b981)">S</div>
+                  <div class="avatar-orb" style="background:linear-gradient(135deg,#a78bfa,#8b5cf6)">+</div>
+                </div>
+                <p class="text-sm font-semibold text-ink/50">
+                  <span class="text-ink font-bold">2,400+</span> students active today
+                </p>
+              </div>
+              <div class="flex items-center gap-1">
+                <i class="fa-solid fa-star text-amber text-xs"></i>
+                <i class="fa-solid fa-star text-amber text-xs"></i>
+                <i class="fa-solid fa-star text-amber text-xs"></i>
+                <i class="fa-solid fa-star text-amber text-xs"></i>
+                <i class="fa-solid fa-star text-amber text-xs"></i>
+                <span class="text-sm text-ink/40 font-medium ml-1.5">Loved by students</span>
+              </div>
+            </div>
+          </div>
+          <!-- end left -->
+
+          <!-- RIGHT: App window card -->
+          <div class="hidden lg:block relative stagger-3">
+            <div class="app-window">
+              <!-- Title bar -->
+              <div class="app-titlebar">
+                <div class="flex gap-1.5">
+                  <span class="w-3 h-3 rounded-full bg-[#FF5F57] border border-black/10"></span>
+                  <span class="w-3 h-3 rounded-full bg-[#FFBE2E] border border-black/10"></span>
+                  <span class="w-3 h-3 rounded-full bg-[#28C840] border border-black/10"></span>
+                </div>
+                <span class="app-titlebar-label">ReadFlow — Active Session</span>
+                <span class="live-badge">
+                  <span class="live-dot"></span>
+                  LIVE
+                </span>
+              </div>
+
+              <!-- Reading passage -->
+              <div class="mb-5">
+                <p class="text-[0.65rem] font-bold text-ink/30 uppercase tracking-widest mb-3">Chapter 3 · The Discovery</p>
+                <div class="space-y-0.5">
+                  <p class="text-[0.85rem] text-ink/30 leading-7">The old library held secrets that</p>
+                  <div class="app-highlight-line">
+                    <span class="w-1.5 h-1.5 rounded-sm bg-amber shrink-0 mt-[10px]"></span>
+                    <p class="text-[0.9rem] font-semibold text-ink leading-7">no one had dared uncover</p>
+                  </div>
+                  <p class="text-[0.85rem] text-ink/25 leading-7">for centuries — hidden behind</p>
+                  <p class="text-[0.85rem] text-ink/15 leading-7">forgotten shelves of dusty books...</p>
+                </div>
+              </div>
+
+              <!-- Playback controls -->
+              <div class="flex items-center gap-2 mb-5">
+                <button class="w-9 h-9 rounded-xl bg-ink text-white text-xs flex items-center justify-center shadow-hard-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all duration-150" tabindex="-1">
+                  <i class="fa-solid fa-play ml-0.5"></i>
+                </button>
+                <button class="w-9 h-9 rounded-xl border border-ink/12 text-ink/40 text-xs flex items-center justify-center hover:bg-ink/5 transition-colors" tabindex="-1">
+                  <i class="fa-solid fa-pause"></i>
+                </button>
+                <button class="w-9 h-9 rounded-xl border border-ink/12 text-ink/40 text-xs flex items-center justify-center hover:bg-ink/5 transition-colors" tabindex="-1">
+                  <i class="fa-solid fa-stop"></i>
+                </button>
+                <div class="ml-auto flex items-center gap-2">
+                  <span class="text-[0.7rem] font-semibold text-ink/35 uppercase tracking-wide">Speed</span>
+                  <span class="px-2.5 py-1 rounded-lg text-[0.72rem] font-bold bg-ink/5 border border-ink/10 text-ink/60">1.0×</span>
+                </div>
+              </div>
+
+              <!-- Progress -->
+              <div class="mb-4">
+                <div class="flex justify-between mb-1.5">
+                  <span class="text-[0.7rem] font-semibold text-ink/35 uppercase tracking-wide">Progress</span>
+                  <span class="text-[0.72rem] font-bold text-green-dark">47% done</span>
+                </div>
+                <div class="h-2.5 bg-ink/6 rounded-full border border-ink/8 overflow-hidden">
+                  <div class="h-full rounded-full bg-green" style="width:47%"></div>
+                </div>
+              </div>
+
+              <!-- Chips -->
+              <div class="flex gap-2 flex-wrap">
+                <span class="app-chip">📏 18px</span>
+                <span class="app-chip app-chip--green">🎯 Focus ON</span>
+                <span class="app-chip app-chip--amber">✨ Highlight ON</span>
+              </div>
+            </div>
+
+            <!-- Floating achievement chip — Duolingo streak energy -->
+            <div class="floating-chip" aria-hidden="true">
+              <span class="text-xl">🔥</span>
+              <div>
+                <p class="text-[0.72rem] font-extrabold text-ink leading-tight">7-day streak!</p>
+                <p class="text-[0.65rem] text-ink/45">Reading daily</p>
+              </div>
+            </div>
+          </div>
+          <!-- end right -->
+
+        </div>
+      </div>
+
+      <!-- Bottom divider wave -->
+      <div class="absolute bottom-0 left-0 right-0" aria-hidden="true">
+        <svg viewBox="0 0 1440 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full">
+          <path d="M0 32 L0 16 Q360 0 720 16 Q1080 32 1440 16 L1440 32 Z" fill="#111111"/>
+        </svg>
+      </div>
+    </section>
 
 
-<div id="readDisplay" class="read-display"></div>
+    <!-- ============================================================
+         STATS STRIP — Khan Academy-style dark banner
+         ============================================================ -->
+    <section class="bg-ink py-12" aria-label="Platform statistics">
+      <div class="max-w-6xl mx-auto px-5 lg:px-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div class="text-center reveal-item">
+            <p class="font-display text-4xl font-extrabold text-green mb-1">1 in 5</p>
+            <p class="text-sm text-white/40 font-medium leading-snug">students need<br>reading support</p>
+          </div>
+          <div class="text-center reveal-item" style="--reveal-delay:.1s">
+            <p class="font-display text-4xl font-extrabold text-green mb-1">3×</p>
+            <p class="text-sm text-white/40 font-medium leading-snug">faster comprehension<br>with audio support</p>
+          </div>
+          <div class="text-center reveal-item" style="--reveal-delay:.2s">
+            <p class="font-display text-4xl font-extrabold text-green mb-1">100%</p>
+            <p class="text-sm text-white/40 font-medium leading-snug">free, no account<br>ever required</p>
+          </div>
+          <div class="text-center reveal-item" style="--reveal-delay:.3s">
+            <p class="font-display text-4xl font-extrabold text-green mb-1">5</p>
+            <p class="text-sm text-white/40 font-medium leading-snug">powerful tools<br>in one place</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-</section>
 
-</main>
+    <!-- ============================================================
+         ABOUT — Notion card grid: bold number, bordered cards
+         ============================================================ -->
+    <section id="about" class="py-24 bg-white" aria-labelledby="aboutHeading">
+      <div class="max-w-6xl mx-auto px-5 lg:px-6">
+
+        <div class="section-intro">
+          <div class="eyebrow-tag">
+            <i class="fa-solid fa-circle-info text-ink/40 text-xs"></i>
+            Understanding reading difficulties
+          </div>
+          <h2 id="aboutHeading" class="section-heading">
+            Why do some students find<br class="hidden sm:block"> reading hard?
+          </h2>
+          <p class="section-sub">Reading is complex — and struggling with it is far more common than most people realise.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-5">
+
+          <div class="notion-card reveal-item group">
+            <span class="notion-card-num">01</span>
+            <div class="notion-icon-wrap bg-sky-50 group-hover:bg-sky-100 transition-colors">
+              <i class="fa-solid fa-brain text-sky-500"></i>
+            </div>
+            <h3 class="notion-card-title">What is a reading difficulty?</h3>
+            <p class="notion-card-body">A reading difficulty means a student finds it harder than expected to decode words, maintain focus, or recall what they've read. It's a difference in how the brain processes text — not a measure of intelligence.</p>
+            <div class="notion-card-chip">
+              <i class="fa-solid fa-users text-[0.65rem]"></i>
+              Affects 20% of students
+            </div>
+          </div>
+
+          <div class="notion-card reveal-item group" style="--reveal-delay:.1s">
+            <span class="notion-card-num">02</span>
+            <div class="notion-icon-wrap bg-violet-50 group-hover:bg-violet-100 transition-colors">
+              <i class="fa-solid fa-person-chalkboard text-violet-500"></i>
+            </div>
+            <h3 class="notion-card-title">Why do students struggle?</h3>
+            <p class="notion-card-body">Factors include visual stress from bright pages, difficulty tracking lines, slow reading pace, and limited working memory. Most classrooms simply can't provide the individual adjustments each student truly needs.</p>
+            <div class="notion-card-chip">
+              <i class="fa-solid fa-flask text-[0.65rem]"></i>
+              Environmental &amp; cognitive
+            </div>
+          </div>
+
+          <div class="notion-card reveal-item group" style="--reveal-delay:.2s">
+            <span class="notion-card-num">03</span>
+            <div class="notion-icon-wrap bg-amber-50 group-hover:bg-amber-100 transition-colors">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber"></i>
+            </div>
+            <h3 class="notion-card-title">How technology helps</h3>
+            <p class="notion-card-body">Text-to-speech bridges hearing and reading. Adjustable fonts and colours reduce eye strain. Focus mode cuts distractions. Together these give every student a genuine, fair chance to engage with any text.</p>
+            <div class="notion-card-chip">
+              <i class="fa-solid fa-circle-check text-[0.65rem]"></i>
+              Research-backed
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
 
 
-<footer class="rf-footer">
+    <!-- ============================================================
+         FEATURES — Duolingo bento: chunky coloured cards
+         ============================================================ -->
+    <section id="features" class="py-24 bg-canvas" aria-labelledby="featuresHeading">
+      <div class="max-w-6xl mx-auto px-5 lg:px-6">
 
-<p>
-© 2026 ReadFlow 
-</p>
+        <div class="section-intro">
+          <div class="eyebrow-tag">
+            <i class="fa-solid fa-star text-ink/40 text-xs"></i>
+            Platform features
+          </div>
+          <h2 id="featuresHeading" class="section-heading">
+            Five tools.<br>One platform.
+          </h2>
+          <p class="section-sub">Everything you need to read comfortably and confidently. Nothing you don't.</p>
+        </div>
 
-</footer>
+        <!-- Bento grid -->
+        <div class="features-bento">
+
+          <!-- Hero feature card: TTS — spans 2 rows -->
+          <div class="feature-card feature-card--green feature-tall reveal-item group">
+            <div class="flex items-start justify-between mb-6">
+              <div class="feature-icon bg-green/20 text-green-dark group-hover:bg-green/30 transition-colors">
+                <i class="fa-solid fa-volume-high"></i>
+              </div>
+              <span class="duo-badge">Most popular</span>
+            </div>
+            <h3 class="font-display text-2xl font-bold text-ink mb-3">Text‑to‑Speech</h3>
+            <p class="text-ink/55 text-[0.9rem] leading-relaxed mb-auto">
+              Have any text read aloud in a natural, clear voice. Every sentence highlights as it's spoken, so your ears and eyes work in sync.
+            </p>
+            <!-- Animated sound wave -->
+            <div class="flex items-end gap-1.5 h-10 mt-8" aria-hidden="true">
+              <span class="wave-bar" style="--h:35%;--d:0s"></span>
+              <span class="wave-bar" style="--h:90%;--d:.1s"></span>
+              <span class="wave-bar" style="--h:55%;--d:.2s"></span>
+              <span class="wave-bar" style="--h:80%;--d:.15s"></span>
+              <span class="wave-bar" style="--h:40%;--d:.05s"></span>
+              <span class="wave-bar" style="--h:70%;--d:.25s"></span>
+              <span class="wave-bar" style="--h:50%;--d:.1s"></span>
+              <span class="wave-bar" style="--h:30%;--d:.3s"></span>
+            </div>
+          </div>
+
+          <!-- Focus Mode -->
+          <div class="feature-card feature-card--amber reveal-item group" style="--reveal-delay:.1s">
+            <div class="feature-icon bg-amber/20 text-amber group-hover:bg-amber/30 transition-colors">
+              <i class="fa-solid fa-eye-slash"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold text-ink mt-5 mb-2">Focus Mode</h3>
+            <p class="text-ink/55 text-sm leading-relaxed">One paragraph at a time. Full screen. Zero distractions.</p>
+          </div>
+
+          <!-- Progress Tracker -->
+          <div class="feature-card feature-card--blue reveal-item group" style="--reveal-delay:.2s">
+            <div class="feature-icon bg-sky-100 text-sky-600 group-hover:bg-sky-200 transition-colors">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold text-ink mt-5 mb-2">Progress Tracker</h3>
+            <p class="text-ink/55 text-sm leading-relaxed">A live bar shows exactly how far through your text you are.</p>
+            <!-- Mini progress preview -->
+            <div class="mt-4 h-2 bg-ink/8 rounded-full overflow-hidden" aria-hidden="true">
+              <div class="h-full bg-sky-400 rounded-full" style="width:62%"></div>
+            </div>
+          </div>
+
+          <!-- Font Size — wide card -->
+          <div class="feature-card feature-card--rose feature-wide reveal-item group" style="--reveal-delay:.15s">
+            <div class="flex items-start gap-4">
+              <div class="feature-icon bg-rose-100 text-rose-500 group-hover:bg-rose-200 transition-colors shrink-0">
+                <i class="fa-solid fa-text-height"></i>
+              </div>
+              <div class="flex-1">
+                <h3 class="font-display text-xl font-bold text-ink mb-2">Font Size &amp; Spacing</h3>
+                <p class="text-ink/55 text-sm leading-relaxed">Drag sliders to instantly resize text, adjust letter spacing, and line height to exactly what feels right for you.</p>
+                <div class="flex items-center gap-2.5 mt-4" aria-hidden="true">
+                  <span class="text-xs font-bold text-ink/25">A</span>
+                  <div class="flex-1 h-2 bg-ink/8 rounded-full overflow-hidden border border-ink/8">
+                    <div class="h-full bg-rose-400 rounded-full" style="width:65%"></div>
+                  </div>
+                  <span class="text-2xl font-bold text-ink/35">A</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Background Themes -->
+          <div class="feature-card feature-card--violet reveal-item group" style="--reveal-delay:.3s">
+            <div class="feature-icon bg-violet-100 text-violet-500 group-hover:bg-violet-200 transition-colors">
+              <i class="fa-solid fa-fill-drip"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold text-ink mt-5 mb-2">Background Themes</h3>
+            <p class="text-ink/55 text-sm leading-relaxed">Choose from cream, blue, green, peach or dark to slash eye strain.</p>
+            <div class="flex gap-2 mt-4" aria-hidden="true">
+              <span class="theme-dot" style="background:#FFFDF5"></span>
+              <span class="theme-dot" style="background:#EAF4FB"></span>
+              <span class="theme-dot" style="background:#EBF6EE"></span>
+              <span class="theme-dot" style="background:#FFF0E6"></span>
+              <span class="theme-dot" style="background:#1a1f2e"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
 
 
-<script src="app.js"></script>
+    <!-- ============================================================
+         TOOLS — Full app-dashboard layout
+         Notion sidebar + Khan Academy structured main panel
+         ============================================================ -->
+    <section id="tools" class="py-24 bg-white" aria-labelledby="toolsHeading">
+      <div class="max-w-6xl mx-auto px-5 lg:px-6">
 
+        <div class="section-intro">
+          <div class="eyebrow-tag">
+            <i class="fa-solid fa-screwdriver-wrench text-ink/40 text-xs"></i>
+            Interactive tool
+          </div>
+          <h2 id="toolsHeading" class="section-heading">Try it right now</h2>
+          <p class="section-sub">Sample text is pre-loaded. Press <strong class="font-bold text-ink">Read Aloud</strong> to start immediately.</p>
+        </div>
+
+        <!-- Dashboard: sidebar + main -->
+        <div class="tool-dashboard">
+
+          <!-- SIDEBAR -->
+          <aside class="tool-sidebar" aria-label="Reading settings">
+
+            <p class="sidebar-label">
+              <i class="fa-solid fa-sliders text-[0.65rem]"></i>
+              Display
+            </p>
+
+            <!-- Font Size -->
+            <div class="ctrl-block">
+              <div class="ctrl-header">
+                <label class="ctrl-name" for="cFontSize">
+                  <i class="fa-solid fa-text-height ctrl-ico"></i>Font Size
+                </label>
+                <span id="cFontSizeVal" class="ctrl-val">20px</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[0.68rem] font-bold text-ink/25">A</span>
+                <input type="range" id="cFontSize" min="14" max="42" value="20" class="rf-slider flex-1" aria-label="Font size" />
+                <span class="text-base font-bold text-ink/30">A</span>
+              </div>
+            </div>
+
+            <!-- Letter Spacing -->
+            <div class="ctrl-block">
+              <div class="ctrl-header">
+                <label class="ctrl-name" for="cSpacing">
+                  <i class="fa-solid fa-arrows-left-right ctrl-ico"></i>Spacing
+                </label>
+                <span id="cSpacingVal" class="ctrl-val">1px</span>
+              </div>
+              <input type="range" id="cSpacing" min="0" max="8" value="1" class="rf-slider w-full" aria-label="Letter spacing" />
+            </div>
+
+            <!-- Line Height -->
+            <div class="ctrl-block">
+              <div class="ctrl-header">
+                <label class="ctrl-name" for="cLineH">
+                  <i class="fa-solid fa-align-justify ctrl-ico"></i>Line Height
+                </label>
+                <span id="cLineHVal" class="ctrl-val">1.8</span>
+              </div>
+              <input type="range" id="cLineH" min="1.2" max="3.0" step="0.1" value="1.8" class="rf-slider w-full" aria-label="Line height" />
+            </div>
+
+            <!-- Speed -->
+            <div class="ctrl-block">
+              <div class="ctrl-header">
+                <label class="ctrl-name" for="cSpeed">
+                  <i class="fa-solid fa-gauge-high ctrl-ico"></i>Speed
+                </label>
+                <span id="cSpeedVal" class="ctrl-val">1.0×</span>
+              </div>
+              <input type="range" id="cSpeed" min="0.5" max="2.0" step="0.1" value="1.0" class="rf-slider w-full" aria-label="Reading speed" />
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <p class="sidebar-label">
+              <i class="fa-solid fa-palette text-[0.65rem]"></i>
+              Background
+            </p>
+
+            <div class="grid grid-cols-5 gap-1.5" role="group" aria-label="Background colour">
+              <button class="rf-swatch active" data-bg="#FFFDF5" data-clr="#111111" aria-label="Cream">
+                <span class="rf-swatch-dot" style="background:#FFFDF5"></span>
+                <span>Cream</span>
+              </button>
+              <button class="rf-swatch" data-bg="#EAF4FB" data-clr="#111111" aria-label="Blue">
+                <span class="rf-swatch-dot" style="background:#EAF4FB"></span>
+                <span>Blue</span>
+              </button>
+              <button class="rf-swatch" data-bg="#EBF6EE" data-clr="#111111" aria-label="Green">
+                <span class="rf-swatch-dot" style="background:#EBF6EE"></span>
+                <span>Green</span>
+              </button>
+              <button class="rf-swatch" data-bg="#FFF0E6" data-clr="#111111" aria-label="Peach">
+                <span class="rf-swatch-dot" style="background:#FFF0E6"></span>
+                <span>Peach</span>
+              </button>
+              <button class="rf-swatch" data-bg="#1a1f2e" data-clr="#e2e8f0" aria-label="Dark">
+                <span class="rf-swatch-dot" style="background:#1a1f2e"></span>
+                <span class="opacity-50">Dark</span>
+              </button>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <p class="sidebar-label">
+              <i class="fa-solid fa-font text-[0.65rem]"></i>
+              Font
+            </p>
+            <select id="cFont" class="rf-select" aria-label="Font style">
+              <option value="'Instrument Sans', sans-serif">Instrument Sans</option>
+              <option value="Georgia, serif">Georgia (Serif)</option>
+              <option value="Verdana, sans-serif">Verdana (Wide)</option>
+              <option value="'Courier New', monospace">Courier (Mono)</option>
+            </select>
+
+          </aside>
+
+          <!-- MAIN PANEL -->
+          <div class="flex flex-col gap-3">
+
+            <!-- Input card -->
+            <div class="main-card">
+              <div class="flex items-center justify-between mb-3">
+                <label class="text-[0.8rem] font-bold text-ink/60 flex items-center gap-2" for="textInput">
+                  <i class="fa-solid fa-clipboard text-ink/25 text-xs"></i>
+                  Your text
+                </label>
+                <span class="text-[0.72rem] text-ink/35 font-medium">
+                  <i class="fa-regular fa-lightbulb text-amber text-xs mr-1"></i>
+                  Click any sentence to jump to it
+                </span>
+              </div>
+              <textarea id="textInput" class="rf-textarea" rows="5"
+                placeholder="Paste or type any text here — a chapter, article, or study notes…"
+                spellcheck="false" aria-label="Text to read"></textarea>
+
+              <!-- Action buttons -->
+              <div class="flex flex-wrap gap-2 mt-4" role="group" aria-label="Playback controls">
+                <button id="btnRead"  class="rf-btn rf-btn--green"><i class="fa-solid fa-circle-play"></i> Read Aloud</button>
+                <button id="btnPause" class="rf-btn rf-btn--amber" disabled><i class="fa-solid fa-circle-pause"></i> Pause</button>
+                <button id="btnStop"  class="rf-btn rf-btn--red" disabled><i class="fa-solid fa-circle-stop"></i> Stop</button>
+                <button id="btnFocus" class="rf-btn rf-btn--outline"><i class="fa-solid fa-eye-slash"></i> Focus Mode</button>
+                <button id="btnClear" class="rf-btn rf-btn--ghost"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+              </div>
+            </div>
+
+            <!-- Progress card -->
+            <div class="main-card py-3.5">
+              <div class="flex items-center justify-between mb-2">
+                <span id="progLabel" class="text-[0.75rem] font-semibold text-ink/40 uppercase tracking-wide">Ready to read</span>
+                <span id="progPct" class="text-[0.75rem] font-extrabold text-green-dark">0%</span>
+              </div>
+              <div id="progBar" class="h-2.5 bg-ink/6 rounded-full overflow-hidden border border-ink/8"
+                role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Reading progress">
+                <div id="progFill" class="h-full w-0 bg-green rounded-full transition-all duration-500 ease-out"></div>
+              </div>
+            </div>
+
+            <!-- Reading display -->
+            <div id="readDisplay" class="read-display" aria-live="polite" aria-label="Reading display">
+              <div id="rdEmpty" class="flex flex-col items-center justify-center py-16 text-center gap-3">
+                <div class="w-16 h-16 rounded-3xl bg-ink/[0.04] border border-ink/8 flex items-center justify-center">
+                  <i class="fa-regular fa-file-lines text-2xl text-ink/15"></i>
+                </div>
+                <p class="text-[0.9rem] font-semibold text-ink/25">Your text will appear here</p>
+                <p class="text-xs text-ink/20">Press <strong class="text-ink/35 font-bold">Read Aloud</strong> to begin</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         CONTACT
+         ============================================================ -->
+    <section id="contact" class="py-24 bg-canvas" aria-labelledby="contactHeading">
+      <div class="max-w-6xl mx-auto px-5 lg:px-6">
+        <div class="grid md:grid-cols-2 gap-16 items-start">
+
+          <!-- Left -->
+          <div class="reveal-item">
+            <div class="eyebrow-tag mb-6">
+              <i class="fa-solid fa-envelope text-ink/40 text-xs"></i>
+              Get in touch
+            </div>
+            <h2 id="contactHeading" class="font-display text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-ink mb-5">
+              We'd love to<br>hear from you.
+            </h2>
+            <p class="text-lg text-ink/50 leading-relaxed mb-10">Questions, feedback, or just saying hello — teachers, parents and students are all welcome.</p>
+
+            <div class="space-y-5">
+              <div class="contact-info-row">
+                <div class="contact-info-icon bg-sky-50 text-sky-500">
+                  <i class="fa-solid fa-clock text-sm"></i>
+                </div>
+                <div>
+                  <p class="font-bold text-ink text-sm">Response time</p>
+                  <p class="text-ink/45 text-sm">We reply within 24 hours</p>
+                </div>
+              </div>
+              <div class="contact-info-row">
+                <div class="contact-info-icon bg-violet-50 text-violet-500">
+                  <i class="fa-solid fa-shield-halved text-sm"></i>
+                </div>
+                <div>
+                  <p class="font-bold text-ink text-sm">Privacy first</p>
+                  <p class="text-ink/45 text-sm">Your data is never shared</p>
+                </div>
+              </div>
+              <div class="contact-info-row">
+                <div class="contact-info-icon bg-green-light text-green-dark">
+                  <i class="fa-solid fa-heart text-sm"></i>
+                </div>
+                <div>
+                  <p class="font-bold text-ink text-sm">Our mission</p>
+                  <p class="text-ink/45 text-sm">Free tools for every student, always</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: form -->
+          <div class="contact-form-card reveal-item" style="--reveal-delay:.15s">
+            <form id="contactForm" novalidate aria-label="Contact form">
+              <div class="grid sm:grid-cols-2 gap-4 mb-4">
+                <div class="rf-field">
+                  <label class="rf-label" for="cfName">Full Name</label>
+                  <div class="rf-input-wrap">
+                    <i class="fa-solid fa-user rf-ico"></i>
+                    <input type="text" id="cfName" class="rf-input" placeholder="Your name" autocomplete="name" />
+                  </div>
+                </div>
+                <div class="rf-field">
+                  <label class="rf-label" for="cfEmail">Email</label>
+                  <div class="rf-input-wrap">
+                    <i class="fa-solid fa-at rf-ico"></i>
+                    <input type="email" id="cfEmail" class="rf-input" placeholder="you@email.com" autocomplete="email" />
+                  </div>
+                </div>
+              </div>
+              <div class="rf-field mb-4">
+                <label class="rf-label" for="cfSubject">Subject</label>
+                <div class="rf-input-wrap">
+                  <i class="fa-solid fa-tag rf-ico"></i>
+                  <input type="text" id="cfSubject" class="rf-input" placeholder="What's this about?" />
+                </div>
+              </div>
+              <div class="rf-field mb-6">
+                <label class="rf-label" for="cfMessage">Message</label>
+                <textarea id="cfMessage" class="rf-input rf-textarea-field" rows="5" placeholder="Write your message…" aria-label="Message"></textarea>
+              </div>
+              <button type="submit" class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-ink hover:bg-ink/85 text-white font-bold text-sm shadow-hard hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all duration-150">
+                <i class="fa-solid fa-paper-plane text-sm"></i>
+                Send Message
+              </button>
+              <p id="formFeedback" class="mt-4 text-sm font-semibold text-center min-h-5" aria-live="polite"></p>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- FOOTER -->
+  <footer class="bg-ink py-10" role="contentinfo">
+    <div class="max-w-6xl mx-auto px-5 lg:px-6">
+      <div class="flex flex-wrap items-center justify-between gap-5">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center">
+            <i class="fa-solid fa-book-open-reader text-white text-xs"></i>
+          </div>
+          <span class="font-display font-bold text-white/80">ReadFlow</span>
+        </div>
+        <p class="text-sm text-white/30">© 2025 ReadFlow · Free for every student, always.</p>
+        <nav aria-label="Footer navigation">
+          <ul class="flex flex-wrap gap-5" role="list">
+            <li><a href="#home"     class="text-sm text-white/35 hover:text-white transition-colors">Home</a></li>
+            <li><a href="#about"    class="text-sm text-white/35 hover:text-white transition-colors">About</a></li>
+            <li><a href="#features" class="text-sm text-white/35 hover:text-white transition-colors">Features</a></li>
+            <li><a href="#tools"    class="text-sm text-white/35 hover:text-white transition-colors">Tools</a></li>
+            <li><a href="#contact"  class="text-sm text-white/35 hover:text-white transition-colors">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- FOCUS MODE OVERLAY -->
+  <div id="focusOverlay" class="focus-overlay" role="dialog" aria-modal="true" aria-labelledby="focusDlgTitle" aria-hidden="true">
+    <div class="focus-panel">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-2.5" id="focusDlgTitle">
+          <div class="w-8 h-8 rounded-xl bg-ink flex items-center justify-center shadow-hard-sm">
+            <i class="fa-solid fa-eye-slash text-white text-xs"></i>
+          </div>
+          <span class="font-display font-bold text-ink">Focus Mode</span>
+        </div>
+        <button id="focusClose" class="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-ink/15 hover:bg-ink/5 text-ink/55 text-sm font-semibold transition-colors" aria-label="Exit focus mode">
+          <i class="fa-solid fa-xmark"></i> Exit
+        </button>
+      </div>
+      <div id="focusText" class="text-xl leading-[2.1] text-ink font-medium min-h-24 mb-8" aria-live="polite"></div>
+      <div class="flex items-center justify-between">
+        <button id="focusPrev" class="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-ink/15 hover:bg-ink/5 text-ink/55 text-sm font-semibold transition-colors disabled:opacity-30" aria-label="Previous paragraph">
+          <i class="fa-solid fa-chevron-left text-xs"></i> Previous
+        </button>
+        <span id="focusCount" class="text-sm font-semibold text-ink/35" aria-live="polite">1 / 1</span>
+        <button id="focusNext" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-ink hover:bg-ink/80 text-white text-sm font-bold transition-all shadow-hard-sm hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-30" aria-label="Next paragraph">
+          Next <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
-```
