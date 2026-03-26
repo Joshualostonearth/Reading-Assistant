@@ -1,117 +1,2009 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ReadEase — Reading Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --bg2: #ede8de;
+    --surface: #ffffff;
+    --border: #d8d0c0;
+    --text: #2a2218;
+    --text2: #6b5f4e;
+    --accent: #e05a2b;
+    --accent2: #4a90a4;
+    --highlight: rgba(224, 90, 43, 0.13);
+    --highlight-border: #e05a2b;
+    --green: #3a9e6e;
+    --yellow: #e8b84b;
+    --radius: 12px;
+    --shadow: 0 2px 16px rgba(42,34,24,0.08);
+    --font-body: 'Lora', serif;
+    --font-ui: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-size: 20px;
+    --line-height: 1.9;
+    --letter-spacing: 0.01em;
+  }
+  .dark {
+    --bg: #18150f;
+    --bg2: #221e15;
+    --surface: #2a2418;
+    --border: #3d3627;
+    --text: #f0e8d8;
+    --text2: #a09070;
+    --highlight: rgba(224, 90, 43, 0.18);
+    --shadow: 0 2px 16px rgba(0,0,0,0.4);
+  }
+  .hc {
+    --bg: #000;
+    --bg2: #111;
+    --surface: #000;
+    --border: #ffff00;
+    --text: #ffffff;
+    --text2: #ffff00;
+    --highlight: rgba(255,255,0,0.2);
+    --highlight-border: #ffff00;
+    --accent: #ffff00;
+    --accent2: #00ffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+  }
 
-<title>ReadFlow – Smart Reading Assistant</title>
+  /* ── SCREENS ── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; }
 
-<link rel="stylesheet" href="style.css">
+  /* ── WELCOME ── */
+  #screen-welcome {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+  #screen-welcome::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(224,90,43,0.08) 0%, transparent 70%);
+    top: -100px; right: -150px;
+    pointer-events: none;
+  }
+  #screen-welcome::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(74,144,164,0.07) 0%, transparent 70%);
+    bottom: -80px; left: -100px;
+    pointer-events: none;
+  }
+  .welcome-logo {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 10px;
+  }
+  .logo-icon {
+    width: 52px; height: 52px;
+    background: var(--accent);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+  }
+  .logo-text {
+    font-family: var(--font-body);
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .logo-text span { color: var(--accent); }
+  .welcome-tagline {
+    color: var(--text2);
+    font-size: 1.05rem;
+    margin-bottom: 48px;
+    font-weight: 300;
+    text-align: center;
+  }
+  .welcome-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    max-width: 700px;
+    width: 100%;
+    margin-bottom: 48px;
+  }
+  .feat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .feat-icon { font-size: 1.8rem; margin-bottom: 8px; }
+  .feat-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+  .feat-desc { color: var(--text2); font-size: 0.8rem; line-height: 1.5; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 32px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(224,90,43,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(224,90,43,0.4); }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    font-size: 0.9rem;
+  }
+  .btn-ghost:hover { color: var(--accent); }
+  .welcome-actions { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .disclaimer {
+    max-width: 500px;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-top: 32px;
+    padding: 12px 16px;
+    background: var(--bg2);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--accent2);
+  }
 
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  /* ── CALIBRATION ── */
+  #screen-calibration {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    position: relative;
+  }
+  .calib-header {
+    position: absolute;
+    top: 30px; left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+  .calib-header h2 { font-family: var(--font-body); font-size: 1.5rem; margin-bottom: 6px; }
+  .calib-header p { color: var(--text2); font-size: 0.9rem; }
+  #calib-video {
+    position: absolute;
+    bottom: 20px; right: 20px;
+    width: 180px; height: 135px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    object-fit: cover;
+    opacity: 0.7;
+  }
+  .calib-dot {
+    position: absolute;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid white;
+    box-shadow: 0 0 0 4px rgba(224,90,43,0.3);
+    transform: translate(-50%,-50%);
+    cursor: pointer;
+    transition: transform 0.3s, background 0.3s;
+    animation: pulse 1.5s infinite;
+  }
+  .calib-dot.collected {
+    background: var(--green);
+    box-shadow: 0 0 0 4px rgba(58,158,110,0.3);
+    animation: none;
+    transform: translate(-50%,-50%) scale(0.7);
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 4px rgba(224,90,43,0.3); }
+    50% { box-shadow: 0 0 0 10px rgba(224,90,43,0.1); }
+  }
+  #calib-progress {
+    position: absolute;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+  .progress-bar-wrap {
+    width: 300px; height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 8px auto;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.4s;
+  }
+  #calib-status { font-size: 0.85rem; color: var(--text2); }
 
+  /* ── SETTINGS PANEL ── */
+  #screen-settings {
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px;
+    background: var(--bg);
+  }
+  .settings-container {
+    max-width: 600px;
+    width: 100%;
+  }
+  .settings-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 36px;
+  }
+  .settings-header h2 { font-family: var(--font-body); font-size: 1.8rem; }
+  .settings-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .settings-group h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text2);
+    margin-bottom: 20px;
+  }
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--bg2);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 0.95rem; font-weight: 500; }
+  .setting-desc { font-size: 0.8rem; color: var(--text2); margin-top: 2px; }
+  .setting-ctrl { display: flex; align-items: center; gap: 8px; }
+  input[type=range] {
+    width: 130px;
+    accent-color: var(--accent);
+  }
+  .val-badge {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    background: var(--bg2);
+    padding: 2px 8px;
+    border-radius: 6px;
+    min-width: 48px;
+    text-align: center;
+  }
+  .theme-btns { display: flex; gap: 8px; }
+  .theme-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .theme-btn.active { border-color: var(--accent); }
+  .toggle {
+    width: 44px; height: 24px;
+    background: var(--border);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: none;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: white;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(20px); }
+
+  /* ── READING SCREEN ── */
+  #screen-reading {
+    flex-direction: column;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+  .reading-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    z-index: 20;
+    gap: 12px;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-title { font-family: var(--font-body); font-weight: 600; font-size: 1.05rem; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    transition: all 0.15s;
+    color: var(--text);
+  }
+  .icon-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .status-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.warn { background: var(--yellow); }
+
+  /* Reading area */
+  .reading-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  .reading-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 50px 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .reading-content {
+    max-width: 680px;
+    width: 100%;
+  }
+  .passage-title {
+    font-family: var(--font-body);
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .passage-meta {
+    font-size: 0.82rem;
+    color: var(--text2);
+    margin-bottom: 40px;
+    display: flex; gap: 16px;
+  }
+  .reading-line {
+    font-family: var(--font-body);
+    font-size: var(--font-size);
+    line-height: var(--line-height);
+    letter-spacing: var(--letter-spacing);
+    color: var(--text);
+    padding: 6px 14px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background 0.3s, border-left-color 0.3s;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+  .reading-line:hover { background: var(--bg2); }
+  .reading-line.active {
+    background: var(--highlight);
+    border-left-color: var(--highlight-border);
+  }
+  .reading-line .word {
+    display: inline;
+    border-radius: 3px;
+    transition: background 0.2s;
+  }
+  .reading-line .word.spoken {
+    background: rgba(224,90,43,0.18);
+  }
+  .reading-line .word.current-word {
+    background: rgba(224,90,43,0.35);
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-radius: 3px;
+  }
+
+  /* Gaze indicator */
+  #gaze-dot {
+    position: fixed;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: rgba(224,90,43,0.6);
+    border: 2px solid var(--accent);
+    pointer-events: none;
+    transform: translate(-50%,-50%);
+    z-index: 9999;
+    transition: left 0.08s, top 0.08s;
+    display: none;
+  }
+
+  /* Webcam preview */
+  #webcam-preview {
+    position: fixed;
+    bottom: 80px; right: 20px;
+    width: 160px; height: 120px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  #webcam-preview video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+  #webcam-preview canvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    transform: scaleX(-1);
+  }
+  .webcam-label {
+    position: absolute;
+    bottom: 4px; left: 0; right: 0;
+    text-align: center;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.8);
+    background: rgba(0,0,0,0.4);
+    padding: 2px;
+  }
+  .toggle-cam-btn {
+    position: fixed;
+    bottom: 48px; right: 20px;
+    font-size: 0.7rem;
+    color: var(--text2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+    z-index: 101;
+  }
+
+  /* Audio controls bar */
+  .audio-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 20;
+    flex-wrap: wrap;
+  }
+  .audio-bar-label { font-size: 0.8rem; color: var(--text2); font-weight: 500; }
+  .speed-btns { display: flex; gap: 4px; }
+  .speed-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    transition: all 0.15s;
+    color: var(--text);
+  }
+  .speed-btn.active, .speed-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+  .voice-select {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 0.82rem;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    max-width: 180px;
+  }
+
+  /* Side metrics panel */
+  .metrics-panel {
+    width: 220px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    padding: 24px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .metrics-panel h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text2);
+    margin-bottom: 4px;
+  }
+  .metric-card {
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 14px;
+    border: 1px solid var(--border);
+  }
+  .metric-val {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .metric-label { font-size: 0.75rem; color: var(--text2); margin-top: 4px; }
+  .mini-bar-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .mini-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s; }
+  .behavior-log {
+    font-size: 0.75rem;
+    color: var(--text2);
+    line-height: 2;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .log-entry {
+    display: flex; gap: 6px;
+    padding: 2px 0;
+    border-bottom: 1px solid var(--bg);
+  }
+  .log-time { font-family: var(--font-mono); opacity: 0.6; }
+  .log-badge {
+    padding: 0 5px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+  }
+  .log-fix { background: rgba(74,144,164,0.2); color: var(--accent2); }
+  .log-reg { background: rgba(232,184,75,0.2); color: var(--yellow); }
+  .log-pause { background: rgba(224,90,43,0.2); color: var(--accent); }
+
+  /* ── DASHBOARD ── */
+  #screen-dashboard {
+    flex-direction: column;
+    padding: 50px 24px;
+    background: var(--bg);
+    align-items: center;
+    overflow-y: auto;
+  }
+  .dashboard-container {
+    max-width: 860px;
+    width: 100%;
+  }
+  .dashboard-header {
+    margin-bottom: 36px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .dashboard-header h2 { font-family: var(--font-body); font-size: 2rem; }
+  .dashboard-header p { color: var(--text2); margin-top: 4px; }
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .dash-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+  .dash-card-icon { font-size: 2rem; margin-bottom: 12px; }
+  .dash-card-val {
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .dash-card-label { font-size: 0.82rem; color: var(--text2); margin-top: 6px; }
+  .dash-section { margin-bottom: 28px; }
+  .dash-section h3 {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text2);
+    margin-bottom: 16px;
+  }
+  .chart-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 120px;
+  }
+  .bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .bar {
+    width: 100%;
+    background: linear-gradient(to top, var(--accent), rgba(224,90,43,0.4));
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    transition: height 0.5s ease;
+  }
+  .bar-label { font-size: 0.7rem; color: var(--text2); font-family: var(--font-mono); }
+  .difficulty-meter {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+  .diff-label { font-size: 0.88rem; margin-bottom: 12px; color: var(--text2); }
+  .diff-track {
+    height: 12px;
+    background: var(--bg2);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .diff-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(to right, var(--green), var(--yellow), var(--accent));
+    transition: width 1s ease;
+  }
+  .diff-markers {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--text2);
+  }
+  .insights-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .insight {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--bg2);
+    font-size: 0.88rem;
+  }
+  .insight:last-child { border-bottom: none; }
+  .insight-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .insight-text { line-height: 1.5; }
+  .insight-strong { font-weight: 600; }
+  .disclaimer-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    font-size: 0.82rem;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-top: 24px;
+  }
+  .dash-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+
+  /* passage selector */
+  .passage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .passage-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .passage-card:hover, .passage-card.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(224,90,43,0.1);
+  }
+  .passage-card-icon { font-size: 1.6rem; flex-shrink: 0; }
+  .passage-card-title { font-weight: 600; font-size: 0.95rem; }
+  .passage-card-meta { font-size: 0.8rem; color: var(--text2); margin-top: 2px; }
+  .level-badge {
+    margin-left: auto;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .level-easy { background: rgba(58,158,110,0.15); color: var(--green); }
+  .level-medium { background: rgba(232,184,75,0.15); color: var(--yellow); }
+  .level-hard { background: rgba(224,90,43,0.15); color: var(--accent); }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+  }
+  .modal h3 { font-family: var(--font-body); font-size: 1.4rem; margin-bottom: 12px; }
+  .modal p { color: var(--text2); font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* PASSAGE selector screen */
+  #screen-select {
+    flex-direction: column;
+    align-items: center;
+    padding: 50px 20px;
+    background: var(--bg);
+    overflow-y: auto;
+  }
+  .select-container { max-width: 640px; width: 100%; }
+  .select-header { margin-bottom: 32px; }
+  .select-header h2 { font-family: var(--font-body); font-size: 1.8rem; margin-bottom: 6px; }
+  .select-header p { color: var(--text2); }
+
+  /* Gaze simulation controls */
+  .sim-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 8px 20px;
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 9998;
+    font-family: var(--font-mono);
+  }
+  .sim-bar span { opacity: 0.6; }
+
+  @media (max-width: 700px) {
+    .metrics-panel { display: none; }
+    .reading-topbar { padding: 10px 14px; }
+    .reading-main { padding: 30px 10px; }
+    #webcam-preview { width: 100px; height: 75px; }
+  }
+</style>
 </head>
-
 <body>
 
-<header class="rf-header">
-<div class="rf-container">
+<!-- GAZE DOT -->
+<div id="gaze-dot"></div>
 
-<h1 class="rf-logo">
-<i class="fa-solid fa-book-open"></i> ReadFlow
-</h1>
-
-<p class="rf-tagline">
-An intelligent reading assistant designed to improve focus and comprehension
-</p>
-
-</div>
-</header>
-
-
-<main class="rf-container">
-
-<section class="rf-card">
-
-<h2>Reading Assistant</h2>
-
-<p class="rf-description">
-Paste your text below and let the assistant read it aloud while tracking your progress.
-</p>
-
-
-<textarea
-id="textInput"
-class="rf-textarea"
-rows="6"
-placeholder="Paste your text here..."
-></textarea>
-
-
-<div class="rf-controls">
-
-<button id="btnRead" class="rf-btn rf-btn--green">
-<i class="fa-solid fa-circle-play"></i> Read Aloud
-</button>
-
-<button id="btnPause" class="rf-btn rf-btn--amber" disabled>
-<i class="fa-solid fa-circle-pause"></i> Pause
-</button>
-
-<button id="btnStop" class="rf-btn rf-btn--red" disabled>
-<i class="fa-solid fa-circle-stop"></i> Stop
-</button>
-
-<button id="btnFocus" class="rf-btn rf-btn--outline">
-<i class="fa-solid fa-eye-slash"></i> Focus Mode
-</button>
-
-<button id="btnClear" class="rf-btn rf-btn--ghost">
-<i class="fa-solid fa-rotate-left"></i> Clear
-</button>
-
+<!-- ═══════════════════════════════ SCREEN: WELCOME ═══════════════════════════════ -->
+<div id="screen-welcome" class="screen active">
+  <div class="welcome-logo">
+    <div class="logo-icon">👁</div>
+    <div class="logo-text">Read<span>Ease</span></div>
+  </div>
+  <p class="welcome-tagline">Assistive reading technology powered by eye tracking & audio guidance</p>
+  <div class="welcome-features">
+    <div class="feat-card">
+      <div class="feat-icon">👁️</div>
+      <div class="feat-title">Gaze Tracking</div>
+      <div class="feat-desc">Webcam-based eye tracking highlights your current reading line in real time</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔊</div>
+      <div class="feat-title">Audio Guidance</div>
+      <div class="feat-desc">Text-to-speech reads aloud and pronounces tricky words when you pause</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
+      <div class="feat-title">Progress Insights</div>
+      <div class="feat-desc">Session metrics track reading speed, fixations, and attention patterns</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🎨</div>
+      <div class="feat-title">Personalised UI</div>
+      <div class="feat-desc">Adjust font size, spacing, contrast, and more for your comfort</div>
+    </div>
+  </div>
+  <div class="welcome-actions">
+    <button class="btn btn-primary" onclick="showScreen('screen-select')">🚀 Start Reading</button>
+    <button class="btn btn-secondary" onclick="showScreen('screen-settings')">⚙️ Settings</button>
+    <button class="btn btn-ghost" id="demo-btn" onclick="startDemoMode()">▶ Try Demo (No Camera)</button>
+  </div>
+  <div class="disclaimer">
+    ⚠️ <strong>Important:</strong> ReadEase is an <em>assistive learning tool only</em> and does not diagnose, assess, or classify any medical or learning condition. Session data is stored locally and never shared.
+  </div>
 </div>
 
-
-<div class="rf-progress">
-
-<div class="rf-progress-info">
-
-<span id="progLabel">Progress</span>
-
-<span id="progPct">0%</span>
-
+<!-- ═══════════════════════════════ SCREEN: PASSAGE SELECT ═══════════════════════════════ -->
+<div id="screen-select" class="screen">
+  <div class="select-container">
+    <div class="select-header">
+      <h2>Choose a Passage</h2>
+      <p>Select a text to read. Eye tracking and audio support will guide you.</p>
+    </div>
+    <div class="passage-list" id="passage-list"></div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" id="start-reading-btn" onclick="initReading()">Begin Reading →</button>
+      <button class="btn btn-ghost" onclick="showScreen('screen-welcome')">← Back</button>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer">
+        <input type="checkbox" id="use-camera-cb" style="accent-color:var(--accent)"> Enable eye tracking
+      </label>
+    </div>
+  </div>
 </div>
 
-<div id="progBar" class="rf-progress-bar">
-
-<div id="progFill" class="rf-progress-fill"></div>
-
+<!-- ═══════════════════════════════ SCREEN: CALIBRATION ═══════════════════════════════ -->
+<div id="screen-calibration" class="screen">
+  <div class="calib-header">
+    <h2>Calibration</h2>
+    <p id="calib-instructions">Look at each orange dot when it appears and click it</p>
+  </div>
+  <video id="calib-video" autoplay muted playsinline></video>
+  <div id="calib-progress">
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="calib-bar" style="width:0%"></div></div>
+    <div id="calib-status">Click each dot as it appears…</div>
+  </div>
 </div>
 
+<!-- ═══════════════════════════════ SCREEN: SETTINGS ═══════════════════════════════ -->
+<div id="screen-settings" class="screen">
+  <div class="settings-container">
+    <div class="settings-header">
+      <button class="icon-btn" onclick="showScreen('screen-welcome')">←</button>
+      <h2>Settings</h2>
+    </div>
+
+    <div class="settings-group">
+      <h3>Typography</h3>
+      <div class="setting-row">
+        <div><div class="setting-label">Font Size</div></div>
+        <div class="setting-ctrl">
+          <input type="range" min="14" max="32" value="20" id="s-fontsize" oninput="updateSetting('fontSize',this.value+'px');this.nextElementSibling.textContent=this.value+'px'">
+          <span class="val-badge">20px</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Line Height</div></div>
+        <div class="setting-ctrl">
+          <input type="range" min="1.3" max="3" step="0.1" value="1.9" id="s-lh" oninput="updateSetting('lineHeight',this.value);this.nextElementSibling.textContent=this.value">
+          <span class="val-badge">1.9</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Letter Spacing</div></div>
+        <div class="setting-ctrl">
+          <input type="range" min="0" max="0.2" step="0.01" value="0.01" id="s-ls" oninput="updateSetting('letterSpacing',this.value+'em');this.nextElementSibling.textContent=this.value+'em'">
+          <span class="val-badge">0.01em</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h3>Appearance</h3>
+      <div class="setting-row">
+        <div><div class="setting-label">Theme</div></div>
+        <div class="theme-btns">
+          <button class="theme-btn active" id="theme-light" onclick="setTheme('light')" style="background:#f5f0e8;border:2px solid var(--accent)">☀️</button>
+          <button class="theme-btn" id="theme-dark" onclick="setTheme('dark')" style="background:#18150f;border:2px solid var(--border)">🌙</button>
+          <button class="theme-btn" id="theme-hc" onclick="setTheme('hc')" style="background:#000;border:2px solid #ffff00">⚡</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Show Gaze Dot</div>
+          <div class="setting-desc">Display a dot showing estimated gaze position</div>
+        </div>
+        <button class="toggle on" id="t-gaze" onclick="this.classList.toggle('on'); appState.showGazeDot = this.classList.contains('on')"></button>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Reading Guide Bar</div>
+          <div class="setting-desc">Show a coloured bar at the active line</div>
+        </div>
+        <button class="toggle on" id="t-guide" onclick="this.classList.toggle('on'); appState.showGuide = this.classList.contains('on')"></button>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h3>Audio</h3>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Auto-read Line</div>
+          <div class="setting-desc">Automatically read each new line aloud</div>
+        </div>
+        <button class="toggle on" id="t-autoread" onclick="this.classList.toggle('on'); appState.autoRead = this.classList.contains('on')"></button>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Pause Pronunciation</div>
+          <div class="setting-desc">Speak a word when gaze lingers too long</div>
+        </div>
+        <button class="toggle on" id="t-pausepron" onclick="this.classList.toggle('on'); appState.pausePronounce = this.classList.contains('on')"></button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="showScreen('screen-welcome')">Save & Return</button>
+  </div>
 </div>
 
+<!-- ═══════════════════════════════ SCREEN: READING ═══════════════════════════════ -->
+<div id="screen-reading" class="screen">
+  <div class="reading-topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" onclick="endSession()" title="Exit">✕</button>
+      <div class="topbar-title" id="reading-title">Reading</div>
+    </div>
+    <div class="topbar-right">
+      <div class="status-pill" id="status-pill">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">No Camera</span>
+      </div>
+      <button class="icon-btn" title="Speak line" onclick="speakCurrentLine()">🔊</button>
+      <button class="icon-btn" title="Stop speech" onclick="stopSpeech()">⏹</button>
+      <button class="icon-btn" title="Settings" onclick="showScreen('screen-settings')">⚙️</button>
+    </div>
+  </div>
 
-<div id="readDisplay" class="read-display"></div>
+  <div class="reading-layout">
+    <!-- Main reading area -->
+    <div class="reading-main" id="reading-main">
+      <div class="reading-content">
+        <div class="passage-title" id="passage-title-text"></div>
+        <div class="passage-meta" id="passage-meta"></div>
+        <div id="passage-lines"></div>
+      </div>
+    </div>
 
-</section>
+    <!-- Metrics panel -->
+    <div class="metrics-panel" id="metrics-panel">
+      <div>
+        <h3>Session Stats</h3>
+        <div class="metric-card">
+          <div class="metric-val" id="m-time">0:00</div>
+          <div class="metric-label">Reading Time</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="m-wpm">—</div>
+        <div class="metric-label">Words / min</div>
+        <div class="mini-bar-wrap"><div class="mini-bar" id="m-wpm-bar" style="width:0%"></div></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="m-fix">0</div>
+        <div class="metric-label">Fixations</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="m-reg">0</div>
+        <div class="metric-label">Regressions</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" id="m-line">1</div>
+        <div class="metric-label">Current Line</div>
+      </div>
+      <div>
+        <h3>Behavior Log</h3>
+        <div class="behavior-log" id="behavior-log"></div>
+      </div>
+    </div>
+  </div>
 
-</main>
+  <!-- Audio bar -->
+  <div class="audio-bar">
+    <span class="audio-bar-label">Speed:</span>
+    <div class="speed-btns">
+      <button class="speed-btn" onclick="setSpeed(0.7,this)">0.7×</button>
+      <button class="speed-btn active" onclick="setSpeed(1,this)">1×</button>
+      <button class="speed-btn" onclick="setSpeed(1.3,this)">1.3×</button>
+      <button class="speed-btn" onclick="setSpeed(1.6,this)">1.6×</button>
+    </div>
+    <span class="audio-bar-label" style="margin-left:8px">Voice:</span>
+    <select class="voice-select" id="voice-select" onchange="selectVoice(this.value)"></select>
+    <button class="btn btn-secondary" style="padding:6px 14px;font-size:0.82rem;margin-left:auto" onclick="speakCurrentLine()">▶ Read Line</button>
+    <button class="btn btn-secondary" style="padding:6px 14px;font-size:0.82rem" onclick="readFullPassage()">▶▶ Read All</button>
+  </div>
 
+  <!-- Webcam preview -->
+  <div id="webcam-preview" style="display:none">
+    <video id="reading-video" autoplay muted playsinline></video>
+    <canvas id="reading-canvas"></canvas>
+    <div class="webcam-label">Eye Tracking Active</div>
+  </div>
+  <button class="toggle-cam-btn" id="toggle-cam-btn" style="display:none" onclick="toggleWebcamPreview()">Hide cam</button>
+</div>
 
-<footer class="rf-footer">
+<!-- ═══════════════════════════════ SCREEN: DASHBOARD ═══════════════════════════════ -->
+<div id="screen-dashboard" class="screen">
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <div>
+        <h2>Session Summary</h2>
+        <p id="dash-subtitle">Your reading session has ended</p>
+      </div>
+      <button class="icon-btn" onclick="showScreen('screen-welcome')">✕</button>
+    </div>
 
-<p>
-© 2026 ReadFlow 
-</p>
+    <div class="dash-grid" id="dash-grid"></div>
 
-</footer>
+    <div class="dash-section">
+      <h3>Reading Speed by Line</h3>
+      <div class="chart-container">
+        <div class="bar-chart" id="speed-chart"></div>
+      </div>
+    </div>
 
+    <div class="dash-section">
+      <h3>Reading Difficulty Indicator</h3>
+      <div class="difficulty-meter">
+        <div class="diff-label" id="diff-label">Calculating…</div>
+        <div class="diff-track"><div class="diff-fill" id="diff-fill" style="width:0%"></div></div>
+        <div class="diff-markers"><span>Fluent</span><span>Developing</span><span>Needs Support</span></div>
+      </div>
+    </div>
 
-<script src="app.js"></script>
+    <div class="dash-section">
+      <h3>Insights & Suggestions</h3>
+      <div class="insights-list" id="insights-list"></div>
+    </div>
 
+    <div class="disclaimer-box">
+      ℹ️ <strong>ReadEase does not diagnose any condition.</strong> The difficulty indicator is a supportive pattern summary based on reading behaviors during this session only. Please consult a qualified professional for any educational or clinical assessment.
+    </div>
+
+    <div class="dash-actions">
+      <button class="btn btn-primary" onclick="showScreen('screen-select')">📖 Read Again</button>
+      <button class="btn btn-secondary" onclick="exportReport()">⬇ Export Report</button>
+      <button class="btn btn-ghost" onclick="showScreen('screen-welcome')">← Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for permission -->
+<div id="modal-cam" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h3>📷 Camera Access</h3>
+    <p>ReadEase needs webcam access to track your gaze. Your video is processed locally — nothing is uploaded or stored.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="skipCamera()">Skip — Use Demo</button>
+      <button class="btn btn-primary" onclick="requestCamera()">Allow Camera</button>
+    </div>
+  </div>
+</div>
+
+<!-- MediaPipe CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  APP STATE
+// ═══════════════════════════════════════════════════════
+const appState = {
+  theme: 'light',
+  fontSize: '20px',
+  lineHeight: '1.9',
+  letterSpacing: '0.01em',
+  showGazeDot: true,
+  showGuide: true,
+  autoRead: true,
+  pausePronounce: true,
+  speechRate: 1,
+  selectedVoice: null,
+  selectedPassage: 0,
+  useCamera: false,
+  demoMode: false,
+  cameraStream: null,
+  gazeX: 0,
+  gazeY: 0,
+  currentLine: -1,
+  calibrated: false,
+  calibPoints: [],
+  faceMesh: null,
+  mpCamera: null,
+};
+
+// Session metrics
+const session = {
+  startTime: null,
+  wordsRead: 0,
+  fixations: 0,
+  regressions: 0,
+  pauses: 0,
+  lineTimings: [],
+  currentLineStart: null,
+  lastLine: -1,
+  gazeSamples: [],
+  fixationTimer: null,
+  pauseTimer: null,
+  behaviors: [],
+  pauseWordTimer: null,
+};
+
+// ═══════════════════════════════════════════════════════
+//  PASSAGES
+// ═══════════════════════════════════════════════════════
+const passages = [
+  {
+    icon: '🐙',
+    title: 'The Octopus',
+    level: 'easy',
+    meta: 'Nature · 120 words · Grade 2–3',
+    lines: [
+      'The octopus is one of the most fascinating animals in the ocean.',
+      'It has eight long arms covered with round suckers that grip tightly.',
+      'Octopuses are very clever and can solve simple puzzles to find food.',
+      'They can squeeze through tiny gaps because they have no solid bones.',
+      'When an octopus feels scared, it squirts a cloud of dark ink.',
+      'The ink cloud confuses the attacker and gives the octopus time to escape.',
+      'Some octopuses can change the colour of their skin in an instant.',
+      'They use this ability to hide from predators or to communicate.',
+      'Octopuses live alone and are mostly active at night when it is dark.',
+      'Scientists believe they are among the most intelligent animals without a backbone.',
+    ]
+  },
+  {
+    icon: '🌍',
+    title: 'Climate and Weather',
+    level: 'medium',
+    meta: 'Science · 180 words · Grade 4–6',
+    lines: [
+      'Climate and weather are two different things, though people often confuse them.',
+      'Weather describes what is happening outside today — sunny, rainy, or windy.',
+      'Climate, on the other hand, describes the typical weather patterns over many years.',
+      'Different parts of the world have very different climates because of their location.',
+      'Areas near the equator receive direct sunlight all year, making them warm.',
+      'Regions near the poles receive sunlight at a steep angle and stay cold.',
+      'Mountain areas can be cold even near the equator because of their altitude.',
+      'Ocean currents also play a significant role in shaping the climate of coastal regions.',
+      'For example, the Gulf Stream keeps parts of northwestern Europe surprisingly mild.',
+      'Over the past century, human activities have begun to change Earth\'s climate.',
+      'Burning fossil fuels releases carbon dioxide, which traps heat in the atmosphere.',
+      'This warming effect is changing rainfall patterns and melting polar ice.',
+      'Understanding climate science helps us prepare for and respond to these changes.',
+    ]
+  },
+  {
+    icon: '🚀',
+    title: 'The First Moon Landing',
+    level: 'hard',
+    meta: 'History · 220 words · Grade 6–8',
+    lines: [
+      'On July 20, 1969, astronaut Neil Armstrong became the first human to walk on the Moon.',
+      'Armstrong and his crewmate Buzz Aldrin landed their spacecraft on the lunar surface.',
+      'Their colleague Michael Collins orbited above in the command module, waiting for their return.',
+      'As Armstrong stepped onto the dusty grey surface, he said his now-famous words.',
+      'He described the landing as "one small step for man, one giant leap for mankind."',
+      'The mission, called Apollo 11, was the result of nearly a decade of preparation.',
+      'In 1961, President Kennedy had challenged the nation to reach the Moon by 1970.',
+      'Hundreds of thousands of scientists, engineers, and technicians worked to make it happen.',
+      'The astronauts collected rock and soil samples to bring back to Earth for study.',
+      'They also planted an American flag and set up scientific instruments on the surface.',
+      'The entire mission was watched live on television by around 600 million people worldwide.',
+      'Armstrong and Aldrin spent approximately two and a half hours outside the spacecraft.',
+      'Returning to Earth safely, they splashed down in the Pacific Ocean on July 24.',
+      'The Apollo 11 mission remains one of the greatest achievements in human history.',
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════════════
+function updateSetting(prop, val) {
+  appState[prop] = val;
+  const map = { fontSize: '--font-size', lineHeight: '--line-height', letterSpacing: '--letter-spacing' };
+  if (map[prop]) document.documentElement.style.setProperty(map[prop], val);
+}
+
+function setTheme(t) {
+  appState.theme = t;
+  document.body.className = t === 'light' ? '' : t;
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('theme-' + t).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+//  PASSAGE SELECTION
+// ═══════════════════════════════════════════════════════
+function buildPassageList() {
+  const list = document.getElementById('passage-list');
+  list.innerHTML = '';
+  passages.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'passage-card' + (i === appState.selectedPassage ? ' selected' : '');
+    card.onclick = () => {
+      appState.selectedPassage = i;
+      document.querySelectorAll('.passage-card').forEach((c, j) =>
+        c.classList.toggle('selected', j === i));
+    };
+    card.innerHTML = `
+      <div class="passage-card-icon">${p.icon}</div>
+      <div>
+        <div class="passage-card-title">${p.title}</div>
+        <div class="passage-card-meta">${p.meta}</div>
+      </div>
+      <span class="level-badge level-${p.level}">${p.level}</span>
+    `;
+    list.appendChild(card);
+  });
+}
+buildPassageList();
+
+// ═══════════════════════════════════════════════════════
+//  INIT READING SESSION
+// ═══════════════════════════════════════════════════════
+function initReading() {
+  appState.useCamera = document.getElementById('use-camera-cb').checked;
+  if (appState.useCamera && !appState.demoMode) {
+    document.getElementById('modal-cam').style.display = 'flex';
+  } else {
+    startReading();
+  }
+}
+
+function skipCamera() {
+  document.getElementById('modal-cam').style.display = 'none';
+  appState.useCamera = false;
+  appState.demoMode = true;
+  startReading();
+}
+
+async function requestCamera() {
+  document.getElementById('modal-cam').style.display = 'none';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    appState.cameraStream = stream;
+    showScreen('screen-calibration');
+    startCalibration();
+  } catch (e) {
+    alert('Camera access denied. Running in demo mode.');
+    appState.useCamera = false;
+    appState.demoMode = true;
+    startReading();
+  }
+}
+
+function startDemoMode() {
+  appState.demoMode = true;
+  appState.useCamera = false;
+  appState.selectedPassage = 0;
+  startReading();
+}
+
+// ═══════════════════════════════════════════════════════
+//  CALIBRATION
+// ═══════════════════════════════════════════════════════
+const calibGrid = [
+  [0.1,0.1],[0.5,0.1],[0.9,0.1],
+  [0.1,0.5],[0.5,0.5],[0.9,0.5],
+  [0.1,0.9],[0.5,0.9],[0.9,0.9]
+];
+let calibIndex = 0;
+const calibData = []; // [{screenX, screenY, eyeX, eyeY}]
+let calibModel = null; // simple linear mapping
+
+function startCalibration() {
+  calibIndex = 0;
+  calibData.length = 0;
+  document.querySelectorAll('.calib-dot').forEach(d => d.remove());
+
+  const vid = document.getElementById('calib-video');
+  vid.srcObject = appState.cameraStream;
+
+  showNextCalibDot();
+}
+
+function showNextCalibDot() {
+  if (calibIndex >= calibGrid.length) {
+    finishCalibration(); return;
+  }
+  const [fx, fy] = calibGrid[calibIndex];
+  const x = fx * window.innerWidth;
+  const y = fy * window.innerHeight;
+
+  const dot = document.createElement('div');
+  dot.className = 'calib-dot';
+  dot.style.left = x + 'px';
+  dot.style.top = y + 'px';
+  dot.id = 'calib-dot-current';
+  dot.onclick = () => collectCalibPoint(x, y, dot);
+  document.getElementById('screen-calibration').appendChild(dot);
+
+  const pct = Math.round((calibIndex / calibGrid.length) * 100);
+  document.getElementById('calib-bar').style.width = pct + '%';
+  document.getElementById('calib-status').textContent = `Point ${calibIndex + 1} of ${calibGrid.length} — Click the dot`;
+}
+
+function collectCalibPoint(sx, sy, dot) {
+  calibData.push({ sx, sy, ex: appState.gazeX || sx, ey: appState.gazeY || sy });
+  dot.classList.add('collected');
+  setTimeout(() => { dot.remove(); calibIndex++; showNextCalibDot(); }, 400);
+}
+
+function finishCalibration() {
+  document.getElementById('calib-bar').style.width = '100%';
+  document.getElementById('calib-status').textContent = 'Calibration complete! Starting reading…';
+  appState.calibrated = true;
+  computeCalibModel();
+  setTimeout(() => startReading(), 1000);
+}
+
+function computeCalibModel() {
+  if (calibData.length < 3) return;
+  
+  const dxArr = calibData.map(d => d.sx - d.ex);
+  const dyArr = calibData.map(d => d.sy - d.ey);
+  calibModel = {
+    dx: dxArr.reduce((a,b) => a+b, 0) / dxArr.length,
+    dy: dyArr.reduce((a,b) => a+b, 0) / dyArr.length
+  };
+}
+
+function mapGazeToScreen(rawX, rawY) {
+  if (!calibModel) return { x: rawX, y: rawY };
+  return { x: rawX + calibModel.dx, y: rawY + calibModel.dy };
+}
+
+// ═══════════════════════════════════════════════════════
+//  READING SCREEN SETUP
+// ═══════════════════════════════════════════════════════
+function startReading() {
+  const p = passages[appState.selectedPassage];
+  document.getElementById('reading-title').textContent = p.title;
+  document.getElementById('passage-title-text').textContent = p.title;
+  document.getElementById('passage-meta').textContent = p.meta;
+
+  // Build lines
+  const container = document.getElementById('passage-lines');
+  container.innerHTML = '';
+  p.lines.forEach((line, i) => {
+    const div = document.createElement('div');
+    div.className = 'reading-line';
+    div.dataset.lineIndex = i;
+    // Wrap each word
+    const words = line.split(' ');
+    div.innerHTML = words.map((w, wi) =>
+      `<span class="word" data-word="${wi}">${w} </span>`
+    ).join('');
+    div.onclick = () => setActiveLine(i, true);
+    container.appendChild(div);
+  });
+
+  // Init session
+  session.startTime = Date.now();
+  session.wordsRead = 0;
+  session.fixations = 0;
+  session.regressions = 0;
+  session.pauses = 0;
+  session.lineTimings = Array(p.lines.length).fill(0);
+  session.currentLineStart = Date.now();
+  session.lastLine = -1;
+  session.behaviors = [];
+  session.gazeSamples = [];
+
+  showScreen('screen-reading');
+
+  // Init audio
+  initTTS();
+
+  // Update status
+  if (appState.useCamera && appState.cameraStream) {
+    initEyeTracking();
+  } else if (appState.demoMode) {
+    initDemoGaze();
+  }
+
+  // Start metrics ticker
+  setInterval(updateMetricsUI, 1000);
+
+  // Auto-activate first line
+  setTimeout(() => setActiveLine(0, appState.autoRead), 500);
+}
+
+// ═══════════════════════════════════════════════════════
+//  LINE MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function setActiveLine(idx, speak = false) {
+  const lines = document.querySelectorAll('.reading-line');
+  if (idx < 0 || idx >= lines.length) return;
+
+  // Detect regression
+  if (idx < appState.currentLine && appState.currentLine >= 0) {
+    session.regressions++;
+    addBehaviorLog('reg', `Regressed to line ${idx + 1}`);
+  }
+
+  // Record timing for previous line
+  if (session.currentLineStart && appState.currentLine >= 0) {
+    const elapsed = (Date.now() - session.currentLineStart) / 1000;
+    session.lineTimings[appState.currentLine] = elapsed;
+  }
+
+  lines.forEach(l => l.classList.remove('active'));
+  lines[idx].classList.add('active');
+
+  // Scroll into view
+  lines[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  appState.currentLine = idx;
+  session.currentLineStart = Date.now();
+  session.lastLine = idx;
+  session.fixations++;
+  addBehaviorLog('fix', `Fixation on line ${idx + 1}`);
+
+  document.getElementById('m-line').textContent = idx + 1;
+
+  // Update words read estimate
+  const p = passages[appState.selectedPassage];
+  session.wordsRead = p.lines.slice(0, idx + 1).join(' ').split(' ').length;
+
+  if (speak && appState.autoRead) speakLine(idx);
+
+  // Start pause detection
+  clearTimeout(session.pauseTimer);
+  session.pauseTimer = setTimeout(() => {
+    session.pauses++;
+    addBehaviorLog('pause', `Long pause on line ${idx + 1}`);
+  }, 4000);
+}
+
+function addBehaviorLog(type, text) {
+  session.behaviors.push({ type, text, time: Date.now() });
+  const log = document.getElementById('behavior-log');
+  const elapsed = Math.round((Date.now() - session.startTime) / 1000);
+  const mm = String(Math.floor(elapsed / 60)).padStart(2,'0');
+  const ss = String(elapsed % 60).padStart(2,'0');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${mm}:${ss}</span><span class="log-badge log-${type}">${type}</span><span>${text}</span>`;
+  log.prepend(entry);
+  // Keep max 30
+  while (log.children.length > 30) log.removeChild(log.lastChild);
+}
+
+// ═══════════════════════════════════════════════════════
+//  METRICS UI
+// ═══════════════════════════════════════════════════════
+function updateMetricsUI() {
+  if (!session.startTime) return;
+  const elapsed = Math.round((Date.now() - session.startTime) / 1000);
+  const mm = Math.floor(elapsed / 60);
+  const ss = elapsed % 60;
+  document.getElementById('m-time').textContent = mm + ':' + String(ss).padStart(2,'0');
+
+  if (elapsed > 5) {
+    const wpm = Math.round((session.wordsRead / elapsed) * 60);
+    document.getElementById('m-wpm').textContent = wpm;
+    document.getElementById('m-wpm-bar').style.width = Math.min(100, (wpm / 200) * 100) + '%';
+  }
+
+  document.getElementById('m-fix').textContent = session.fixations;
+  document.getElementById('m-reg').textContent = session.regressions;
+}
+
+// ═══════════════════════════════════════════════════════
+//  EYE TRACKING (MediaPipe FaceMesh)
+// ═══════════════════════════════════════════════════════
+async function initEyeTracking() {
+  const vidEl = document.getElementById('reading-video');
+  const canvEl = document.getElementById('reading-canvas');
+  const preview = document.getElementById('webcam-preview');
+  const toggleBtn = document.getElementById('toggle-cam-btn');
+
+  vidEl.srcObject = appState.cameraStream;
+  preview.style.display = 'block';
+  toggleBtn.style.display = 'block';
+
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  dot.className = 'status-dot warn';
+  txt.textContent = 'Loading…';
+
+  try {
+    const faceMesh = new FaceMesh({ locateFile: f =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/${f}` });
+
+    faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+
+    faceMesh.onResults(onFaceMeshResults);
+    appState.faceMesh = faceMesh;
+
+    const cam = new Camera(vidEl, {
+      onFrame: async () => { await faceMesh.send({ image: vidEl }); },
+      width: 640, height: 480
+    });
+    await cam.start();
+    appState.mpCamera = cam;
+
+    dot.className = 'status-dot active';
+    txt.textContent = 'Eye Tracking';
+    setStatusPill(true);
+
+  } catch (e) {
+    console.warn('MediaPipe not available, falling back to demo:', e);
+    dot.className = 'status-dot';
+    txt.textContent = 'Demo Mode';
+    initDemoGaze();
+  }
+}
+
+// MediaPipe iris landmark indices
+const LEFT_IRIS = [474, 475, 476, 477];
+const RIGHT_IRIS = [469, 470, 471, 472];
+const LEFT_EYE_OUTER = 33;
+const LEFT_EYE_INNER = 133;
+
+function onFaceMeshResults(results) {
+  if (!results.multiFaceLandmarks || !results.multiFaceLandmarks.length) return;
+
+  const lm = results.multiFaceLandmarks[0];
+  const canv = document.getElementById('reading-canvas');
+  const ctx = canv.getContext('2d');
+  canv.width = 160; canv.height = 120;
+
+  // Draw iris dots on mini canvas
+  ctx.clearRect(0, 0, 160, 120);
+  ctx.fillStyle = 'rgba(224,90,43,0.8)';
+  LEFT_IRIS.forEach(i => {
+    const p = lm[i];
+    ctx.beginPath();
+    ctx.arc(p.x * 160, p.y * 120, 2, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // Estimate gaze from iris center relative to eye corners
+  const leftIrisCenter = avgPoints(LEFT_IRIS.map(i => lm[i]));
+  const rightIrisCenter = avgPoints(RIGHT_IRIS.map(i => lm[i]));
+
+  // Use horizontal iris displacement within eye socket as gaze proxy
+  const eyeLeft = lm[LEFT_EYE_OUTER];
+  const eyeRight = lm[LEFT_EYE_INNER];
+  const eyeWidth = Math.abs(eyeRight.x - eyeLeft.x);
+  const irisOffset = (leftIrisCenter.x - eyeLeft.x) / eyeWidth; // 0..1
+
+  // Vertical: use nose bridge vs iris y
+  const nose = lm[1];
+  const vertOffset = (leftIrisCenter.y - nose.y + 0.1) * 5; // rough
+
+  // Map to screen coords (mirrored)
+  const rawX = (1 - leftIrisCenter.x) * window.innerWidth;
+  const rawY = (leftIrisCenter.y + 0.1) * window.innerHeight * 2;
+
+  const mapped = mapGazeToScreen(rawX, rawY);
+  updateGaze(mapped.x, mapped.y);
+}
+
+function avgPoints(pts) {
+  return { x: pts.reduce((s,p) => s+p.x, 0)/pts.length, y: pts.reduce((s,p) => s+p.y, 0)/pts.length };
+}
+
+// ═══════════════════════════════════════════════════════
+//  DEMO GAZE (mouse-based simulation)
+// ═══════════════════════════════════════════════════════
+let demoGazeInterval = null;
+let demoLineIdx = 0;
+
+function initDemoGaze() {
+  setStatusPill(false);
+  document.getElementById('status-text').textContent = 'Demo Mode';
+
+  // Slowly advance through lines automatically
+  const p = passages[appState.selectedPassage];
+  demoLineIdx = 0;
+
+  function advanceLine() {
+    if (demoLineIdx < p.lines.length) {
+      setActiveLine(demoLineIdx, appState.autoRead);
+      // Simulate gaze moving to the line
+      const lineEl = document.querySelectorAll('.reading-line')[demoLineIdx];
+      if (lineEl) {
+        const rect = lineEl.getBoundingClientRect();
+        const cx = rect.left + rect.width * 0.3 + Math.random() * rect.width * 0.4;
+        const cy = rect.top + rect.height / 2;
+        updateGaze(cx, cy);
+      }
+      demoLineIdx++;
+      // Variable time per line based on length
+      const delay = 3000 + p.lines[demoLineIdx - 1].length * 35;
+      demoGazeInterval = setTimeout(advanceLine, delay);
+    }
+  }
+
+  // Start after a brief pause
+  setTimeout(advanceLine, 1500);
+
+  // Also track mouse as override
+  document.getElementById('screen-reading').addEventListener('mousemove', e => {
+    updateGaze(e.clientX, e.clientY);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  GAZE PROCESSING
+// ═══════════════════════════════════════════════════════
+let gazeHistory = [];
+const SMOOTHING = 0.25;
+
+function updateGaze(rawX, rawY) {
+  // Exponential smoothing
+  appState.gazeX = appState.gazeX * (1 - SMOOTHING) + rawX * SMOOTHING;
+  appState.gazeY = appState.gazeY * (1 - SMOOTHING) + rawY * SMOOTHING;
+
+  gazeHistory.push({ x: appState.gazeX, y: appState.gazeY, t: Date.now() });
+  if (gazeHistory.length > 30) gazeHistory.shift();
+
+  // Update gaze dot
+  if (appState.showGazeDot) {
+    const dot = document.getElementById('gaze-dot');
+    dot.style.display = 'block';
+    dot.style.left = appState.gazeX + 'px';
+    dot.style.top = appState.gazeY + 'px';
+  }
+
+  // Map to reading line
+  mapGazeToLine(appState.gazeX, appState.gazeY);
+}
+
+function mapGazeToLine(gx, gy) {
+  const lines = document.querySelectorAll('.reading-line');
+  for (let i = 0; i < lines.length; i++) {
+    const rect = lines[i].getBoundingClientRect();
+    if (gy >= rect.top - 10 && gy <= rect.bottom + 10) {
+      if (i !== appState.currentLine) {
+        setActiveLine(i, appState.autoRead);
+      }
+      // Word-level mapping (optional)
+      if (appState.pausePronounce) {
+        mapGazeToWord(lines[i], gx);
+      }
+      break;
+    }
+  }
+}
+
+let wordHoverTimer = null;
+let lastWordEl = null;
+
+function mapGazeToWord(lineEl, gx) {
+  const words = lineEl.querySelectorAll('.word');
+  for (const w of words) {
+    const r = w.getBoundingClientRect();
+    if (gx >= r.left && gx <= r.right) {
+      if (w !== lastWordEl) {
+        clearTimeout(wordHoverTimer);
+        lastWordEl = w;
+        wordHoverTimer = setTimeout(() => {
+          // Pause on a word — pronounce it
+          const text = w.textContent.trim().replace(/[^a-zA-Z'-]/g, '');
+          if (text.length > 3) {
+            speakWord(text);
+            w.classList.add('current-word');
+            setTimeout(() => w.classList.remove('current-word'), 2000);
+          }
+        }, 2500);
+      }
+      break;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  TEXT-TO-SPEECH
+// ═══════════════════════════════════════════════════════
+let voices = [];
+let utterance = null;
+
+function initTTS() {
+  if (!('speechSynthesis' in window)) return;
+  function loadVoices() {
+    voices = window.speechSynthesis.getVoices();
+    const sel = document.getElementById('voice-select');
+    sel.innerHTML = '';
+    voices.forEach((v, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `${v.name} (${v.lang})`;
+      sel.appendChild(opt);
+    });
+    // Prefer English voices
+    const engIdx = voices.findIndex(v => v.lang.startsWith('en'));
+    if (engIdx >= 0) { sel.value = engIdx; appState.selectedVoice = voices[engIdx]; }
+  }
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function selectVoice(idx) {
+  appState.selectedVoice = voices[idx] || null;
+}
+
+function speakLine(idx) {
+  const p = passages[appState.selectedPassage];
+  if (!p || idx >= p.lines.length) return;
+  speak(p.lines[idx]);
+}
+
+function speakCurrentLine() {
+  speakLine(appState.currentLine >= 0 ? appState.currentLine : 0);
+}
+
+function speakWord(word) {
+  speak(word);
+}
+
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  stopSpeech();
+  utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = appState.speechRate;
+  utterance.pitch = 1;
+  if (appState.selectedVoice) utterance.voice = appState.selectedVoice;
+
+  // Highlight words as spoken
+  utterance.onboundary = (e) => {
+    if (e.name !== 'word') return;
+    const lineEl = document.querySelectorAll('.reading-line')[appState.currentLine];
+    if (!lineEl) return;
+    const words = lineEl.querySelectorAll('.word');
+    // Estimate word index from char position
+    const fullText = passages[appState.selectedPassage].lines[appState.currentLine];
+    const soFar = fullText.substring(0, e.charIndex);
+    const wordIdx = soFar.split(' ').length - 1;
+    words.forEach((w, i) => {
+      w.classList.remove('spoken', 'current-word');
+      if (i < wordIdx) w.classList.add('spoken');
+      if (i === wordIdx) w.classList.add('current-word');
+    });
+  };
+
+  utterance.onend = () => {
+    const lineEl = document.querySelectorAll('.reading-line')[appState.currentLine];
+    if (lineEl) lineEl.querySelectorAll('.word').forEach(w => { w.classList.remove('spoken','current-word'); });
+  };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopSpeech() {
+  window.speechSynthesis.cancel();
+}
+
+function setSpeed(rate, btn) {
+  appState.speechRate = rate;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function readFullPassage() {
+  const p = passages[appState.selectedPassage];
+  speak(p.lines.join('. '));
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATUS PILL
+// ═══════════════════════════════════════════════════════
+function setStatusPill(active) {
+  document.getElementById('status-dot').className = 'status-dot' + (active ? ' active' : '');
+}
+
+// ═══════════════════════════════════════════════════════
+//  WEBCAM PREVIEW TOGGLE
+// ═══════════════════════════════════════════════════════
+let camVisible = true;
+function toggleWebcamPreview() {
+  camVisible = !camVisible;
+  document.getElementById('webcam-preview').style.display = camVisible ? 'block' : 'none';
+  document.getElementById('toggle-cam-btn').textContent = camVisible ? 'Hide cam' : 'Show cam';
+}
+
+// ═══════════════════════════════════════════════════════
+//  SESSION END + DASHBOARD
+// ═══════════════════════════════════════════════════════
+function endSession() {
+  stopSpeech();
+  clearTimeout(demoGazeInterval);
+  if (appState.mpCamera) { try { appState.mpCamera.stop(); } catch(e){} }
+  document.getElementById('gaze-dot').style.display = 'none';
+  buildDashboard();
+  showScreen('screen-dashboard');
+}
+
+function buildDashboard() {
+  const elapsed = Math.round((Date.now() - session.startTime) / 1000);
+  const mm = Math.floor(elapsed / 60);
+  const ss = elapsed % 60;
+  const wpm = elapsed > 5 ? Math.round((session.wordsRead / elapsed) * 60) : 0;
+  const p = passages[appState.selectedPassage];
+
+  document.getElementById('dash-subtitle').textContent =
+    `"${p.title}" · ${mm}m ${ss}s session`;
+
+  // Summary cards
+  const cards = [
+    { icon: '⏱', val: mm + ':' + String(ss).padStart(2,'0'), label: 'Total Time' },
+    { icon: '📖', val: wpm || '—', label: 'Words / Min' },
+    { icon: '👁', val: session.fixations, label: 'Fixations' },
+    { icon: '↩', val: session.regressions, label: 'Regressions' },
+    { icon: '⏸', val: session.pauses, label: 'Long Pauses' },
+    { icon: '📝', val: p.lines.length, label: 'Lines Read' },
+  ];
+  const grid = document.getElementById('dash-grid');
+  grid.innerHTML = '';
+  cards.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'dash-card';
+    d.innerHTML = `<div class="dash-card-icon">${c.icon}</div><div class="dash-card-val">${c.val}</div><div class="dash-card-label">${c.label}</div>`;
+    grid.appendChild(d);
+  });
+
+  // Speed chart (line timings)
+  const chart = document.getElementById('speed-chart');
+  chart.innerHTML = '';
+  const timings = session.lineTimings.filter(t => t > 0);
+  const maxT = Math.max(...timings, 1);
+  timings.forEach((t, i) => {
+    const pct = Math.max(4, (t / maxT) * 100);
+    const g = document.createElement('div');
+    g.className = 'bar-group';
+    g.innerHTML = `<div class="bar" style="height:${pct}%"></div><div class="bar-label">L${i+1}</div>`;
+    chart.appendChild(g);
+  });
+
+  // Difficulty score (simple heuristic ML-like calculation)
+  const regRate = session.fixations > 0 ? session.regressions / session.fixations : 0;
+  const pauseRate = session.fixations > 0 ? session.pauses / session.fixations : 0;
+  const speedScore = wpm > 0 ? Math.min(1, wpm / 150) : 0.5;
+  const diffScore = Math.min(100, Math.round(
+    (regRate * 40) + (pauseRate * 35) + ((1 - speedScore) * 25)
+  ));
+  document.getElementById('diff-fill').style.width = diffScore + '%';
+  document.getElementById('diff-label').textContent =
+    diffScore < 30 ? `Fluent reading pattern detected (score: ${diffScore}/100)` :
+    diffScore < 60 ? `Developing reader — some pauses noted (score: ${diffScore}/100)` :
+    `Needs additional support — frequent pauses & regressions (score: ${diffScore}/100)`;
+
+  // Insights
+  const insights = [];
+  if (wpm > 120) insights.push({ icon: '🎉', text: `<span class="insight-strong">Strong reading pace</span> — ${wpm} WPM is above average for this level.` });
+  if (wpm < 60 && wpm > 0) insights.push({ icon: '🐢', text: `<span class="insight-strong">Slower pace detected</span> — Reading at ${wpm} WPM. Practising with shorter passages may help build confidence.` });
+  if (session.regressions > 3) insights.push({ icon: '↩', text: `<span class="insight-strong">${session.regressions} regressions</span> observed. This may indicate unfamiliar vocabulary or difficulty tracking lines. Try larger font or line spacing.` });
+  if (session.pauses > 4) insights.push({ icon: '⏸', text: `<span class="insight-strong">${session.pauses} long pauses</span> recorded. The audio pronunciation feature can help when tricky words cause hesitation.` });
+  if (session.regressions <= 1) insights.push({ icon: '✅', text: `<span class="insight-strong">Excellent line tracking</span> — very few regressions suggest good visual flow.` });
+  insights.push({ icon: '💡', text: `<span class="insight-strong">Suggestion:</span> Try adjusting font size or line spacing in Settings to find your most comfortable reading layout.` });
+
+  const insightList = document.getElementById('insights-list');
+  insightList.innerHTML = '';
+  insights.forEach(ins => {
+    const d = document.createElement('div');
+    d.className = 'insight';
+    d.innerHTML = `<div class="insight-icon">${ins.icon}</div><div class="insight-text">${ins.text}</div>`;
+    insightList.appendChild(d);
+  });
+}
+
+function exportReport() {
+  const p = passages[appState.selectedPassage];
+  const elapsed = Math.round((Date.now() - session.startTime) / 1000);
+  const wpm = elapsed > 5 ? Math.round((session.wordsRead / elapsed) * 60) : 0;
+  const report = {
+    app: 'ReadEase',
+    passage: p.title,
+    date: new Date().toISOString(),
+    duration_seconds: elapsed,
+    words_per_minute: wpm,
+    fixations: session.fixations,
+    regressions: session.regressions,
+    long_pauses: session.pauses,
+    disclaimer: 'This data is for supportive purposes only and does not constitute a medical or educational diagnosis.',
+    behaviors: session.behaviors.slice(-20)
+  };
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `readease-session-${Date.now()}.json`;
+  a.click();
+}
+
+// ═══════════════════════════════════════════════════════
+//  VOICE SELECT INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices(); // trigger load
+  }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (document.getElementById('screen-reading').classList.contains('active')) {
+    if (e.key === 'ArrowDown') setActiveLine(appState.currentLine + 1, appState.autoRead);
+    if (e.key === 'ArrowUp') setActiveLine(appState.currentLine - 1, false);
+    if (e.key === ' ') { e.preventDefault(); speakCurrentLine(); }
+    if (e.key === 'Escape') stopSpeech();
+  }
+});
+</script>
 </body>
 </html>
-```
