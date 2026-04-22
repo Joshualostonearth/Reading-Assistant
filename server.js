@@ -29,28 +29,28 @@ function generateSelfSignedCert() {
 // ===== MIME types for serving static files =====
 const MIME_TYPES = {
     '.html': 'text/html',
-    '.css':  'text/css',
-    '.js':   'application/javascript',
+    '.css': 'text/css',
+    '.js': 'application/javascript',
     '.json': 'application/json',
-    '.png':  'image/png',
-    '.jpg':  'image/jpeg',
-    '.svg':  'image/svg+xml',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.svg': 'image/svg+xml',
     '.woff': 'font/woff',
     '.woff2': 'font/woff2',
     '.wasm': 'application/wasm',
-    '.map':  'application/json',
+    '.map': 'application/json',
 };
 
 // ===== Static file server =====
 function serveFile(req, res) {
     let filePath = req.url === '/' ? '/index.html' : req.url;
-    
+
     // Remove query string
     filePath = filePath.split('?')[0];
-    
+
     // Security: prevent directory traversal
     filePath = path.normalize(filePath).replace(/^(\.\.[\/\\])+/, '');
-    
+
     const fullPath = path.join(__dirname, filePath);
     const ext = path.extname(fullPath).toLowerCase();
     const mimeType = MIME_TYPES[ext] || 'application/octet-stream';
@@ -98,7 +98,7 @@ if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
         cert: fs.readFileSync(certPath),
         key: fs.readFileSync(keyPath),
     };
-    
+
     const server = https.createServer(options, serveFile);
     server.listen(PORT, '0.0.0.0', () => {
         console.log('');
@@ -131,7 +131,7 @@ if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
         console.log('  ║                                              ║');
         console.log('  ║  npx -y mkcert create-ca                     ║');
         console.log('  ║  npx -y mkcert create-cert                   ║');
-        console.log('  ║  (then rename .crt → cert.pem, .key → key.pem)' );
+        console.log('  ║  (then rename .crt → cert.pem, .key → key.pem)');
         console.log('  ║                                              ║');
         console.log('  ║  OR just use:                                ║');
         console.log('  ║  npx -y http-server . -S -p 3000             ║');
