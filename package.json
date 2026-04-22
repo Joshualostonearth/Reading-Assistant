@@ -1,7 +1,7 @@
 {
   "name": "eye-tracking-reader",
   "version": "1.0.0",
-  "description": "A web-based eye-tracking prototype that uses your webcam to track where you look while reading text. Built with WebGazer.js.",
+  "description": "",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,6 +12,5 @@
   "type": "commonjs",
   "dependencies": {
     "webgazer": "^3.4.0"
-  },
-  "devDependencies": {}
+  }
 }

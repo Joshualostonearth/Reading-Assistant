@@ -12,7 +12,7 @@
     // Reversal pairs to track — words that can be read as their reverse
     const REVERSAL_PAIRS = {
         'was': 'saw', 'saw': 'was',
-        'on': 'no',   'no': 'on',
+        'on': 'no', 'no': 'on',
         'tap': 'pat', 'pat': 'tap',
         'god': 'dog', 'dog': 'god',
         'pot': 'top', 'top': 'pot',
@@ -22,13 +22,13 @@
 
     // ===== AGE-BASED WPM BENCHMARKS =====
     const WPM_BENCHMARKS = {
-        '6-7':   { below: 60,  avgLow: 60,  avgHigh: 90,  above: 90 },
-        '8-9':   { below: 90,  avgLow: 90,  avgHigh: 130, above: 130 },
+        '6-7': { below: 60, avgLow: 60, avgHigh: 90, above: 90 },
+        '8-9': { below: 90, avgLow: 90, avgHigh: 130, above: 130 },
         '10-11': { below: 120, avgLow: 120, avgHigh: 160, above: 160 },
         '12-13': { below: 140, avgLow: 140, avgHigh: 180, above: 180 },
         '14-15': { below: 160, avgLow: 160, avgHigh: 200, above: 200 },
         '16-17': { below: 180, avgLow: 180, avgHigh: 220, above: 220 },
-        '18+':   { below: 200, avgLow: 200, avgHigh: 280, above: 280 },
+        '18+': { below: 200, avgLow: 200, avgHigh: 280, above: 280 },
     };
 
     // ===== CONFIG =====
@@ -42,7 +42,7 @@
     // ===== STATE =====
     const state = {
         currentScreen: 'startup',
-        ageGroup: null,
+        ageGroup: '18+',
         // Gaze data
         gazeLog: [],
         fixations: [],
@@ -73,9 +73,20 @@
         filterWordsRead: new Set(),
         // Focus mode
         focusMode: false,
+        // Sequential line/word progression
+        currentLineIndex: 0,
+        currentWordInLine: 0,
+        lineWordMap: [],           // lineWordMap[lineIdx] = [wordIdx, wordIdx, …]
+        clearedWords: new Set(),
+        // Font scaling
+        fontSize: 26,
+        // Stale gaze pulse
+        lastGazeTime: 0,
+        staleGazeTimer: null,
+        isPulsing: false,
         // Performance: cached DOM refs & word positions
         wordElements: [],          // cached array of word span elements
-        wordPositions: [],         // cached [{cx, cy}] centers of each word
+        wordPositions: [],         // cached [{cx, cy, left, top, right, bottom}] of each word
         activeWordEl: null,        // currently highlighted word element
         gazeDotEl: null,           // cached gaze dot element
         heatmapToggleEl: null,     // cached heatmap toggle element
@@ -94,11 +105,11 @@
     const $$ = (sel) => document.querySelectorAll(sel);
 
     const screens = {
-        startup:        $('#screen-startup'),
-        calibration:    $('#screen-calibration'),
-        headStabilize:  $('#screen-head-stabilize'),
-        reading:        $('#screen-reading'),
-        summary:        $('#screen-summary'),
+        startup: $('#screen-startup'),
+        calibration: $('#screen-calibration'),
+        headStabilize: $('#screen-head-stabilize'),
+        reading: $('#screen-reading'),
+        summary: $('#screen-summary'),
     };
 
     // ===== SCREEN MANAGEMENT =====
@@ -112,16 +123,8 @@
     $('#btn-start').addEventListener('click', initWebGazer);
 
     async function initWebGazer() {
-        // Validate age selection
-        const ageSelect = $('#age-group');
-        if (!ageSelect.value) {
-            const statusEl = $('#startup-status');
-            statusEl.textContent = 'Please select an age group first.';
-            statusEl.className = 'status-text error';
-            ageSelect.focus();
-            return;
-        }
-        state.ageGroup = ageSelect.value;
+        // Default age group (age selector removed from UI)
+        state.ageGroup = '18+';
 
         const statusEl = $('#startup-status');
         statusEl.textContent = 'Initializing eye tracker...';
@@ -149,7 +152,7 @@
             // Full resolution — GPU handles 640x480 @ 30fps without breaking a sweat
             webgazer.params.camConstraints = {
                 video: {
-                    width:  { ideal: 640 },
+                    width: { ideal: 640 },
                     height: { ideal: 480 },
                     facingMode: 'user',
                     frameRate: { ideal: 30, max: 30 }
@@ -157,11 +160,11 @@
             };
 
             // Larger viewer = more face pixels = better eye crop = better gaze accuracy
-            webgazer.params.videoViewerWidth  = 320;
+            webgazer.params.videoViewerWidth = 320;
             webgazer.params.videoViewerHeight = 240;
 
             // Still skip overlays — just visual noise
-            webgazer.params.showFaceOverlay     = false;
+            webgazer.params.showFaceOverlay = false;
             webgazer.params.showFaceFeedbackBox = false;
 
             statusEl.textContent = 'Requesting camera (GPU-accelerated mode)...';
@@ -169,7 +172,7 @@
             // weightedRidge weights recent calibration clicks more heavily
             // so it stays accurate as the session progresses
             webgazer.setRegression('weightedRidge');
-            webgazer.setGazeListener(() => {});
+            webgazer.setGazeListener(() => { });
             webgazer.saveDataAcrossSessions(false);
             await webgazer.begin();
             webgazer.showPredictionPoints(false);
@@ -284,7 +287,7 @@
 
         const STABLE_REQUIRED_MS = 3000;
         const CENTER_THRESHOLD = 0.18;  // fraction of viewport (18%)
-        const STABLE_THRESHOLD = 0.04;  // movement threshold for "stable"
+        const STABLE_THRESHOLD = 0.08;  // movement threshold for "stable" (increased — face mesh has inherent jitter)
         const TILT_THRESHOLD = 15;      // degrees
 
         let posHistory = [];
@@ -353,9 +356,9 @@
             // Map to the face guide circle — flip X because video is mirrored
             const guideSize = 280; // wrapper size
             const dotLeft = 10 + (guideSize - 20) * (1 - normX); // flip X for mirror
-            const dotTop  = 10 + (guideSize - 20) * normY;
+            const dotTop = 10 + (guideSize - 20) * normY;
             const dotPctLeft = (dotLeft / guideSize) * 100;
-            const dotPctTop  = (dotTop / guideSize) * 100;
+            const dotPctTop = (dotTop / guideSize) * 100;
 
             faceDot.style.left = `${dotPctLeft}%`;
             faceDot.style.top = `${dotPctTop}%`;
@@ -372,10 +375,18 @@
 
             let isStable = false;
             if (posHistory.length > 5) {
-                let maxDrift = 0;
-                const ref = posHistory[posHistory.length - 1];
+                // Use mean position as reference (not the last sample) for noise robustness
+                let meanX = 0, meanY = 0;
                 for (const p of posHistory) {
-                    const d = Math.hypot(p.x - ref.x, p.y - ref.y);
+                    meanX += p.x;
+                    meanY += p.y;
+                }
+                meanX /= posHistory.length;
+                meanY /= posHistory.length;
+
+                let maxDrift = 0;
+                for (const p of posHistory) {
+                    const d = Math.hypot(p.x - meanX, p.y - meanY);
                     if (d > maxDrift) maxDrift = d;
                 }
                 isStable = maxDrift < STABLE_THRESHOLD;
@@ -472,7 +483,7 @@
         indicator.classList.add('visible');
 
         const DRIFT_WARN = 0.10;  // 10% drift = yellow
-        const DRIFT_BAD  = 0.20;  // 20% drift = red
+        const DRIFT_BAD = 0.20;  // 20% drift = red
 
         state.headTrackingInterval = setInterval(() => {
             if (state.currentScreen !== 'reading') return;
@@ -551,7 +562,7 @@
         btns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const filterName = btn.dataset.filter;
-                
+
                 // Save current filter session
                 saveFilterSession();
 
@@ -603,15 +614,156 @@
             const container = $('#text-container');
             if (e.target.checked) {
                 container.classList.add('focus-mode-active');
+                // Reset progression to start
+                state.currentLineIndex = 0;
+                state.currentWordInLine = 0;
+                state.clearedWords = new Set();
+                // Remove old per-word states
+                state.wordElements.forEach(w => {
+                    w.classList.remove('word-target', 'word-cleared', 'line-active');
+                });
+                buildLineWordMap();
+                applyLineProgression();
             } else {
                 container.classList.remove('focus-mode-active');
-                // Remove blur from all words
-                $$('.word').forEach(w => {
-                    w.style.filter = '';
+                // Remove all progression classes
+                state.wordElements.forEach(w => {
+                    w.classList.remove('line-active', 'word-target', 'word-cleared');
                     w.style.opacity = '';
                 });
             }
         });
+    }
+
+    // ===== LINE/WORD MAP BUILDER =====
+    // Groups word elements into lines based on vertical position
+    function buildLineWordMap() {
+        const elements = state.wordElements;
+        if (elements.length === 0) return;
+
+        const lines = [];
+        let currentLine = [0];
+        let currentTop = state.wordPositions[0] ? state.wordPositions[0].cy : 0;
+
+        for (let i = 1; i < elements.length; i++) {
+            const pos = state.wordPositions[i];
+            if (!pos) continue;
+            // If the vertical center differs by more than 15px, it's a new line
+            if (Math.abs(pos.cy - currentTop) > 15) {
+                lines.push(currentLine);
+                currentLine = [i];
+                currentTop = pos.cy;
+            } else {
+                currentLine.push(i);
+            }
+        }
+        if (currentLine.length > 0) {
+            lines.push(currentLine);
+        }
+
+        state.lineWordMap = lines;
+    }
+
+    // ===== APPLY LINE PROGRESSION =====
+    // Updates the visual state of all words based on current line/word progress
+    function applyLineProgression() {
+        if (!state.focusMode || state.lineWordMap.length === 0) return;
+
+        const lineIdx = state.currentLineIndex;
+        const elements = state.wordElements;
+
+        // Remove all progression classes first
+        for (let i = 0; i < elements.length; i++) {
+            elements[i].classList.remove('line-active', 'word-target');
+        }
+
+        // Mark cleared words
+        state.clearedWords.forEach(idx => {
+            elements[idx].classList.add('word-cleared');
+        });
+
+        // If we've finished all lines, just show everything
+        if (lineIdx >= state.lineWordMap.length) {
+            elements.forEach(w => {
+                w.classList.add('line-active', 'word-cleared');
+            });
+            return;
+        }
+
+        // Activate current line
+        const currentLineWords = state.lineWordMap[lineIdx];
+        currentLineWords.forEach(wordIdx => {
+            elements[wordIdx].classList.add('line-active');
+        });
+
+        // Highlight the current target word in green
+        if (state.currentWordInLine < currentLineWords.length) {
+            const targetIdx = currentLineWords[state.currentWordInLine];
+            // Only highlight if not already cleared
+            if (!state.clearedWords.has(targetIdx)) {
+                elements[targetIdx].classList.add('word-target');
+            }
+        }
+    }
+
+    // ===== FONT SCALING SETUP =====
+    function setupFontScaling() {
+        const MIN_FONT = 14;
+        const MAX_FONT = 48;
+        const STEP = 2;
+
+        const updateFontSize = (delta) => {
+            state.fontSize = Math.max(MIN_FONT, Math.min(MAX_FONT, state.fontSize + delta));
+            // Apply to all word elements
+            state.wordElements.forEach(w => {
+                w.style.fontSize = state.fontSize + 'px';
+            });
+            $('#font-size-label').textContent = state.fontSize + 'px';
+
+            // Critical: recalculate bounding boxes after font change
+            // Use requestAnimationFrame to wait for layout recalc
+            requestAnimationFrame(() => {
+                cacheWordPositions();
+                buildLineWordMap();
+                if (state.focusMode) {
+                    applyLineProgression();
+                }
+            });
+        };
+
+        $('#btn-font-increase').addEventListener('click', () => updateFontSize(STEP));
+        $('#btn-font-decrease').addEventListener('click', () => updateFontSize(-STEP));
+    }
+
+    // ===== STALE GAZE DETECTOR =====
+    function startStaleGazeDetector() {
+        const STALE_THRESHOLD_MS = 3000;
+        const readingArea = $('#reading-area');
+
+        state.lastGazeTime = Date.now();
+        state.isPulsing = false;
+
+        state.staleGazeTimer = setInterval(() => {
+            if (state.currentScreen !== 'reading') return;
+
+            const elapsed = Date.now() - state.lastGazeTime;
+            if (elapsed > STALE_THRESHOLD_MS && !state.isPulsing) {
+                readingArea.classList.add('gaze-pulse');
+                state.isPulsing = true;
+            }
+        }, 500);
+    }
+
+    function stopStaleGazeDetector() {
+        if (state.staleGazeTimer) {
+            clearInterval(state.staleGazeTimer);
+            state.staleGazeTimer = null;
+        }
+        const readingArea = $('#reading-area');
+        if (readingArea) {
+            readingArea.classList.remove('gaze-pulse');
+        }
+        state.isPulsing = false;
     }
 
     // ===== READING =====
@@ -700,6 +852,20 @@
         // Setup controls
         setupFilterButtons();
         setupFocusMode();
+        setupFontScaling();
+
+        // Build initial line/word map
+        buildLineWordMap();
+
+        // Start stale gaze detector
+        startStaleGazeDetector();
+
+        // Initialize progression state
+        state.currentLineIndex = 0;
+        state.currentWordInLine = 0;
+        state.clearedWords = new Set();
+        state.fontSize = 26;
+        $('#font-size-label').textContent = '26px';
 
         $('#toggle-heatmap').addEventListener('change', (e) => {
             const canvas = $('#heatmap-canvas');
@@ -717,11 +883,18 @@
         });
     }
 
-    // Cache word center positions — called once on start and on resize
+    // Cache word positions — called once on start and on resize/font change
     function cacheWordPositions() {
         state.wordPositions = state.wordElements.map(w => {
             const rect = w.getBoundingClientRect();
-            return { cx: rect.left + rect.width / 2, cy: rect.top + rect.height / 2 };
+            return {
+                cx: rect.left + rect.width / 2,
+                cy: rect.top + rect.height / 2,
+                left: rect.left,
+                top: rect.top,
+                right: rect.right,
+                bottom: rect.bottom,
+            };
         });
     }
 
@@ -731,6 +904,15 @@
         if (state.currentScreen !== 'reading') return;
 
         const now = Date.now();
+
+        // Update stale gaze tracker
+        state.lastGazeTime = now;
+        if (state.isPulsing) {
+            // Gaze resumed — remove pulse
+            const readingArea = $('#reading-area');
+            readingArea.classList.remove('gaze-pulse');
+            state.isPulsing = false;
+        }
 
         state.smoothX += (data.x - state.smoothX) * GAZE_SMOOTHING;
         state.smoothY += (data.y - state.smoothY) * GAZE_SMOOTHING;
@@ -830,23 +1012,12 @@
             // Remove active from previous word (just 1 element, not all)
             if (state.activeWordEl) {
                 state.activeWordEl.classList.remove('gaze-active');
-                // In focus mode, blur the old word
-                if (state.focusMode) {
-                    state.activeWordEl.style.filter = '';
-                    state.activeWordEl.style.opacity = '';
-                }
             }
 
             // Activate new word
             closest.classList.add('gaze-active');
             closest.classList.add('gaze-visited');
             state.activeWordEl = closest;
-
-            // In focus mode, unblur the new word
-            if (state.focusMode) {
-                closest.style.filter = 'blur(0)';
-                closest.style.opacity = '1';
-            }
 
             // Word focus count
             const word = closest.textContent;
@@ -862,6 +1033,43 @@
                     state.filterRegressions++;
                 }
                 state.lastWordIndex = closestIdx;
+            }
+        }
+
+        // === Sequential word clearance (focus mode) ===
+        if (state.focusMode && state.lineWordMap.length > 0) {
+            const lineIdx = state.currentLineIndex;
+            if (lineIdx < state.lineWordMap.length) {
+                const currentLineWords = state.lineWordMap[lineIdx];
+                const targetWordInLine = state.currentWordInLine;
+
+                if (targetWordInLine < currentLineWords.length) {
+                    const targetGlobalIdx = currentLineWords[targetWordInLine];
+
+                    // Check if gaze intersects the target word's bounding box
+                    const tPos = state.wordPositions[targetGlobalIdx];
+                    if (tPos && x >= tPos.left && x <= tPos.right && y >= tPos.top && y <= tPos.bottom) {
+                        // Word cleared!
+                        state.clearedWords.add(targetGlobalIdx);
+                        state.wordElements[targetGlobalIdx].classList.remove('word-target');
+                        state.wordElements[targetGlobalIdx].classList.add('word-cleared');
+                        state.currentWordInLine++;
+
+                        // Check if line is complete
+                        if (state.currentWordInLine >= currentLineWords.length) {
+                            // Mark all words in the finished line as cleared
+                            currentLineWords.forEach(idx => {
+                                state.clearedWords.add(idx);
+                                state.wordElements[idx].classList.add('word-cleared');
+                            });
+                            // Advance to next line
+                            state.currentLineIndex++;
+                            state.currentWordInLine = 0;
+                        }
+
+                        applyLineProgression();
+                    }
+                }
             }
         }
     }
@@ -931,17 +1139,17 @@
 
             if (t < 0.33) {
                 const s = t / 0.33;
-                data[i]     = 60;
+                data[i] = 60;
                 data[i + 1] = Math.round(80 + 160 * s);
                 data[i + 2] = 255;
             } else if (t < 0.66) {
                 const s = (t - 0.33) / 0.33;
-                data[i]     = Math.round(255 * s);
+                data[i] = Math.round(255 * s);
                 data[i + 1] = 240;
                 data[i + 2] = Math.round(255 * (1 - s));
             } else {
                 const s = (t - 0.66) / 0.34;
-                data[i]     = 255;
+                data[i] = 255;
                 data[i + 1] = Math.round(240 * (1 - s));
                 data[i + 2] = 0;
             }
@@ -958,8 +1166,9 @@
     function finishReading() {
         state.readingEndTime = Date.now();
         clearInterval(state.timerInterval);
+        stopStaleGazeDetector();
 
-        webgazer.setGazeListener(() => {});
+        webgazer.setGazeListener(() => { });
         $('#gaze-dot').classList.remove('visible');
         $('#head-indicator').classList.remove('visible');
         clearInterval(state.headTrackingInterval);
@@ -1495,6 +1704,10 @@
         // Recache word positions after layout change
         if (state.wordElements.length > 0) {
             cacheWordPositions();
+            buildLineWordMap();
+            if (state.focusMode) {
+                applyLineProgression();
+            }
         }
     });
 

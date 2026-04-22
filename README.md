@@ -132,58 +132,6 @@ You do NOT need to run `npm init` or `npm install` again — those are one-time 
 
 ---
 
-## Running on Mobile (iPhone/Android)
-
-The app works on smartphones — the phone's front camera is usually better quality than a laptop webcam, which gives WebGazer better data to work with.
-
-### Requirements
-- Your phone and PC must be on the **same WiFi network**
-- iPhone: Use **Safari** (not Chrome on iOS)
-- Android: Use **Chrome**
-
-### Step 1 — Start the HTTPS server
-
-Mobile browsers require HTTPS for camera access. Use this command:
-
-```
-npx -y http-server . -S -p 3000
-```
-
-> **Note:** The `-S` flag enables HTTPS with a self-signed certificate. You'll see security warnings — this is normal.
-
-### Step 2 — Find your PC's IP address
-
-In the terminal, type:
-
-```
-ipconfig
-```
-
-Look for **"IPv4 Address"** under your WiFi adapter. It will look like `192.168.x.x` or `172.20.x.x`.
-
-### Step 3 — Open on your phone
-
-1. Open **Safari** on your iPhone
-2. Go to: `https://YOUR_PC_IP:3000` (example: `https://192.168.1.50:3000`)
-3. You'll see a security warning — this is expected:
-   - Tap **"Show Details"** or **"Advanced"**
-   - Tap **"Visit this website"** or **"Proceed"**
-   - Tap **"Visit Website"** to confirm
-4. The GazeReader app will load with a mobile-optimized layout
-
-### Step 4 — Allow camera access
-
-- Safari will ask for camera permission — tap **Allow**
-- Make sure your face is well-lit and visible to the front camera
-- Hold the phone at arm's length (~30-40cm from your face)
-
-### Tips for Mobile Eye Tracking
-- **Use portrait mode** for startup/calibration, landscape works too for reading
-- **Good lighting is crucial** — face a window or lamp
-- **Hold the phone steady** — prop it against something if possible
-- **iPhone front camera advantage**: much better image quality than most laptop webcams
-
-
 ## Project Files
 
 ### Core Application Files
