@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Eye-tracking reading disability screening tool using WebGazer.js for real-time gaze analysis, reading pattern detection, and intervention recommendations.">
+    <title>GazeReader — Reading Disability Screening Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ===== STARTUP SCREEN ===== -->
+    <div id="screen-startup" class="screen active">
+        <div class="startup-container">
+            <div class="logo-icon">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                    <circle cx="24" cy="24" r="20" stroke="url(#grad1)" stroke-width="2.5"/>
+                    <circle cx="24" cy="24" r="12" stroke="url(#grad1)" stroke-width="2"/>
+                    <circle cx="24" cy="24" r="5" fill="url(#grad1)"/>
+                    <defs>
+                        <linearGradient id="grad1" x1="0" y1="0" x2="48" y2="48">
+                            <stop offset="0%" stop-color="#6C63FF"/>
+                            <stop offset="100%" stop-color="#3CF0C5"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h1 class="startup-title">GazeReader</h1>
+            <p class="startup-subtitle">Reading disability screening &amp; intervention tool powered by eye-tracking</p>
+
+            <div class="permissions-card">
+                <div class="perm-icon">📷</div>
+                <div class="perm-text">
+                    <strong>Camera Access Required</strong>
+                    <span>Your webcam will be used for real-time gaze estimation. No data leaves your device.</span>
+                </div>
+            </div>
+
+            <!-- Age Group Selector -->
+            <div class="age-selector">
+                <label for="age-group" class="age-label">Reader's Age Group</label>
+                <select id="age-group" class="age-dropdown">
+                    <option value="" disabled selected>Select age group…</option>
+                    <option value="6-7">6 – 7 years</option>
+                    <option value="8-9">8 – 9 years</option>
+                    <option value="10-11">10 – 11 years</option>
+                    <option value="12-13">12 – 13 years</option>
+                    <option value="14-15">14 – 15 years</option>
+                    <option value="16-17">16 – 17 years</option>
+                    <option value="18+">18+ years</option>
+                </select>
+            </div>
+
+            <div class="instructions">
+                <div class="instruction-step">
+                    <span class="step-num">1</span>
+                    <span>Allow camera access when prompted</span>
+                </div>
+                <div class="instruction-step">
+                    <span class="step-num">2</span>
+                    <span>Calibrate by clicking on the dots</span>
+                </div>
+                <div class="instruction-step">
+                    <span class="step-num">3</span>
+                    <span>Read the text naturally — we'll analyze your reading patterns</span>
+                </div>
+            </div>
+
+            <button id="btn-start" class="btn-primary">
+                <span>Initialize Eye Tracker</span>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M4 10h12m-4-4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <p id="startup-status" class="status-text"></p>
+        </div>
+    </div>
+
+    <!-- ===== CALIBRATION SCREEN ===== -->
+    <div id="screen-calibration" class="screen">
+        <div class="calibration-header">
+            <h2>Calibration</h2>
+            <p>Click each dot 5 times while looking directly at it. The dot turns green when done.</p>
+            <div class="calibration-progress">
+                <div id="cal-progress-bar" class="cal-progress-fill"></div>
+            </div>
+            <span id="cal-progress-text" class="cal-progress-label">0 / 9 points</span>
+        </div>
+        <div id="calibration-points"></div>
+        <button id="btn-start-reading" class="btn-primary" disabled>
+            <span>Stabilize Head Position</span>
+        </button>
+    </div>
+
+    <!-- ===== HEAD STABILIZATION SCREEN ===== -->
+    <div id="screen-head-stabilize" class="screen">
+        <div class="stabilize-container">
+            <div class="stabilize-header">
+                <h2>Head Position Calibration</h2>
+                <p>Keep your face centered in the circle and hold still. Stay in the green zone for 3 seconds to proceed.</p>
+            </div>
+
+            <div class="face-guide-wrapper">
+                <!-- Camera feed will be cloned/mirrored here -->
+                <div id="face-guide-viewport" class="face-guide-viewport">
+                    <video id="stabilize-video" class="stabilize-video" autoplay playsinline muted></video>
+                </div>
+
+                <!-- The target circle -->
+                <svg class="face-guide-ring" viewBox="0 0 300 300">
+                    <defs>
+                        <linearGradient id="ringGrad" x1="0" y1="0" x2="300" y2="300" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#6C63FF"/>
+                            <stop offset="100%" stop-color="#3CF0C5"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="150" cy="150" r="130" stroke="url(#ringGrad)" stroke-width="4" fill="none" opacity="0.4"/>
+                    <circle id="face-ring-progress" cx="150" cy="150" r="130" stroke="url(#ringGrad)" stroke-width="4" fill="none"
+                        stroke-dasharray="817" stroke-dashoffset="817" stroke-linecap="round"
+                        style="transform: rotate(-90deg); transform-origin: center;"/>
+                </svg>
+
+                <!-- Crosshair center marker -->
+                <div class="face-crosshair">
+                    <div class="crosshair-h"></div>
+                    <div class="crosshair-v"></div>
+                </div>
+
+                <!-- Face position indicator dot -->
+                <div id="face-position-dot" class="face-position-dot"></div>
+            </div>
+
+            <!-- Status indicators -->
+            <div class="stabilize-status">
+                <div class="stabilize-metric">
+                    <span class="metric-label">Position</span>
+                    <span id="head-position-status" class="metric-value status-bad">Detecting…</span>
+                </div>
+                <div class="stabilize-metric">
+                    <span class="metric-label">Stability</span>
+                    <span id="head-stability-status" class="metric-value status-bad">—</span>
+                </div>
+                <div class="stabilize-metric">
+                    <span class="metric-label">Tilt</span>
+                    <span id="head-tilt-status" class="metric-value status-bad">—</span>
+                </div>
+            </div>
+
+            <div id="stabilize-progress-bar" class="stabilize-progress">
+                <div id="stabilize-progress-fill" class="stabilize-progress-fill"></div>
+            </div>
+            <p id="stabilize-instruction" class="stabilize-instruction">Center your face in the circle</p>
+
+            <button id="btn-begin-reading" class="btn-primary" disabled>
+                <span>Begin Reading</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== READING SCREEN ===== -->
+    <div id="screen-reading" class="screen">
+        <div class="reading-topbar">
+            <div class="topbar-left">
+                <span class="topbar-label">GazeReader</span>
+                <span id="reading-timer" class="topbar-timer">00:00</span>
+            </div>
+            <div class="topbar-right">
+                <!-- Color Filter Selector -->
+                <div class="filter-selector">
+                    <span class="filter-label">Filter:</span>
+                    <button class="filter-btn active" data-filter="none" title="No filter">⊘</button>
+                    <button class="filter-btn" data-filter="yellow" title="Yellow overlay">
+                        <span class="filter-dot" style="background:#FFD54F"></span>
+                    </button>
+                    <button class="filter-btn" data-filter="blue" title="Blue overlay">
+                        <span class="filter-dot" style="background:#64B5F6"></span>
+                    </button>
+                    <button class="filter-btn" data-filter="pink" title="Pink overlay">
+                        <span class="filter-dot" style="background:#F48FB1"></span>
+                    </button>
+                    <button class="filter-btn" data-filter="green" title="Green overlay">
+                        <span class="filter-dot" style="background:#81C784"></span>
+                    </button>
+                    <button class="filter-btn" data-filter="peach" title="Peach overlay">
+                        <span class="filter-dot" style="background:#FFAB91"></span>
+                    </button>
+                </div>
+
+                <div class="topbar-divider"></div>
+
+                <label class="toggle-label">
+                    <input type="checkbox" id="toggle-focus-mode"> Focus
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="toggle-heatmap"> Heatmap
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="toggle-gaze-dot" checked> Gaze Dot
+                </label>
+                <button id="btn-finish" class="btn-secondary">Finish Reading</button>
+            </div>
+        </div>
+
+        <div id="reading-area" class="reading-area">
+            <!-- Color overlay layer -->
+            <div id="color-overlay" class="color-overlay"></div>
+            <canvas id="heatmap-canvas" class="heatmap-canvas"></canvas>
+            <div id="text-container" class="text-container"></div>
+        </div>
+
+        <div id="gaze-dot" class="gaze-dot"></div>
+
+        <!-- Head position indicator overlay on camera -->
+        <div id="head-indicator" class="head-indicator">
+            <div class="head-indicator-ring">
+                <svg viewBox="0 0 60 60" class="head-ring-svg">
+                    <circle cx="30" cy="30" r="26" stroke="#3cf0c5" stroke-width="2" fill="none" opacity="0.3"/>
+                    <circle id="head-ring-live" cx="30" cy="30" r="26" stroke="#3cf0c5" stroke-width="2.5" fill="none"
+                        stroke-dasharray="163" stroke-dashoffset="0" stroke-linecap="round"/>
+                </svg>
+                <div id="head-dot-live" class="head-dot-live"></div>
+            </div>
+            <span id="head-indicator-label" class="head-indicator-label">Stable</span>
+        </div>
+    </div>
+
+    <!-- ===== SUMMARY SCREEN ===== -->
+    <div id="screen-summary" class="screen">
+        <div class="summary-container">
+            <h2 class="summary-title">Reading Analysis Report</h2>
+            <p class="summary-subtitle">Comprehensive reading behavior analysis and screening indicators</p>
+
+            <!-- Disclaimer -->
+            <div class="disclaimer-card">
+                <span class="disclaimer-icon">⚕️</span>
+                <p>This tool provides <strong>screening indicators only</strong>, not clinical diagnoses. Results should be reviewed with a qualified educational psychologist or reading specialist.</p>
+            </div>
+
+            <!-- Reading Speed Assessment -->
+            <div class="report-section">
+                <h3 class="section-title">📊 Reading Speed</h3>
+                <div class="speed-assessment">
+                    <div class="speed-gauge">
+                        <span class="speed-value" id="stat-wpm">—</span>
+                        <span class="speed-unit">words/min</span>
+                    </div>
+                    <div class="speed-benchmark" id="speed-benchmark">
+                        <div class="benchmark-bar">
+                            <div class="benchmark-fill" id="benchmark-fill"></div>
+                            <div class="benchmark-marker" id="benchmark-marker"></div>
+                        </div>
+                        <div class="benchmark-labels">
+                            <span>Below Average</span>
+                            <span>Average</span>
+                            <span>Above Average</span>
+                        </div>
+                        <p class="benchmark-desc" id="benchmark-desc"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Core Metrics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-duration">—</span>
+                    <span class="stat-label">Reading Time</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-fixations">—</span>
+                    <span class="stat-label">Fixations</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-regressions">—</span>
+                    <span class="stat-label">Regressions</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-avg-fixation">—</span>
+                    <span class="stat-label">Avg. Fixation</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-flow-score">—</span>
+                    <span class="stat-label">Flow Score</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-regression-rate">—</span>
+                    <span class="stat-label">Regression Rate</span>
+                </div>
+            </div>
+
+            <!-- Diagnostic Indicators -->
+            <div class="report-section">
+                <h3 class="section-title">🔍 Screening Indicators</h3>
+                <div id="indicators-container" class="indicators-container"></div>
+            </div>
+
+            <!-- Color Filter Comparison -->
+            <div class="report-section" id="filter-comparison-section" style="display:none">
+                <h3 class="section-title">🎨 Color Filter Comparison</h3>
+                <div id="filter-comparison" class="filter-comparison"></div>
+            </div>
+
+            <!-- Reversal Word Analysis -->
+            <div class="report-section" id="reversal-section" style="display:none">
+                <h3 class="section-title">🔄 Reversal Word Analysis</h3>
+                <p class="section-desc">Words that can be reversed (e.g., "was" → "saw") are key indicators. Extended fixation on these words may suggest processing difficulty.</p>
+                <div id="reversal-chart" class="reversal-chart"></div>
+            </div>
+
+            <!-- Word Focus Distribution -->
+            <div class="report-section">
+                <h3 class="section-title">📖 Word Focus Distribution</h3>
+                <div id="word-focus-chart" class="word-focus-chart"></div>
+            </div>
+
+            <!-- Intervention Recommendations -->
+            <div class="report-section" id="interventions-section" style="display:none">
+                <h3 class="section-title">💡 Intervention Recommendations</h3>
+                <p class="section-desc">Based on the reading patterns detected, the following educational and psychological interventions may help:</p>
+                <div id="interventions-container" class="interventions-container"></div>
+            </div>
+
+            <!-- Gaze Data Log -->
+            <div class="report-section">
+                <h3 class="section-title">📋 Gaze Data Log <span class="log-count" id="log-count"></span></h3>
+                <div class="gaze-log-table-wrapper">
+                    <table class="gaze-log-table">
+                        <thead>
+                            <tr>
+                                <th>Time (s)</th>
+                                <th>X</th>
+                                <th>Y</th>
+                                <th>Nearest Word</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gaze-log-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="summary-actions">
+                <button id="btn-download" class="btn-secondary">Download CSV</button>
+                <button id="btn-download-report" class="btn-secondary">Download Report</button>
+                <button id="btn-restart" class="btn-primary">
+                    <span>Read Again</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load TF.js explicitly so we can force WebGL backend before WebGazer initialises -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <script src="./node_modules/webgazer/dist/webgazer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
